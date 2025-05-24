@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Máy chủ: 127.0.0.1:3306
--- Thời gian đã tạo: Th5 24, 2025 lúc 11:24 AM
+-- Thời gian đã tạo: Th5 24, 2025 lúc 06:16 PM
 -- Phiên bản máy phục vụ: 9.1.0
 -- Phiên bản PHP: 8.3.14
 
@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS `admin` (
   `email` varchar(100) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `username` (`username`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Đang đổ dữ liệu cho bảng `admin`
@@ -95,7 +95,7 @@ CREATE TABLE IF NOT EXISTS `movie` (
   `status` enum('coming_soon','now_showing','ended') DEFAULT 'coming_soon',
   `poster_url` varchar(255) DEFAULT NULL COMMENT 'URL ảnh poster phim',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Đang đổ dữ liệu cho bảng `movie`
@@ -239,23 +239,19 @@ CREATE TABLE IF NOT EXISTS `registered_user` (
   `email` varchar(100) NOT NULL,
   `phone` varchar(20) DEFAULT NULL,
   `password` varchar(255) NOT NULL,
+  `role` enum('user','admin') NOT NULL DEFAULT 'user',
   PRIMARY KEY (`id`),
   UNIQUE KEY `email` (`email`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Đang đổ dữ liệu cho bảng `registered_user`
 --
 
-INSERT INTO `registered_user` (`id`, `name`, `email`, `phone`, `password`) VALUES
-(1, 'Nguyễn Văn An', 'nguyenvanan@gmail.com', '0901234567', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi'),
-(2, 'Trần Thị Bình', 'tranthibinh@gmail.com', '0912345678', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi'),
-(3, 'Lê Minh Cường', 'leminhcuong@gmail.com', '0923456789', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi'),
-(4, 'Phạm Thị Dung', 'phamthidung@gmail.com', '0934567890', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi'),
-(5, 'Hoàng Văn Em', 'hoangvanem@gmail.com', '0945678901', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi'),
-(6, 'Vũ Thị Fang', 'vuthifang@gmail.com', '0956789012', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi'),
-(7, 'Test User', 'testuser@example.com', '0123456789', '$2b$10$NIo9VFGPw0UIsL2Ut8jCKunMKog.MHZ/zcNgokYoeJAI8PNjcHXze'),
-(8, 'Nguyễn Hải Đăng nè ', 'dangcuh2105@gmail.com', NULL, '$2b$10$pv83YIyUySgHLgkFfoNRDetAIIu4C67B.5Fe8g5ptFPgKHgSozn/.');
+INSERT INTO `registered_user` (`id`, `name`, `email`, `phone`, `password`, `role`) VALUES
+(8, 'Nguyễn Hải Đăng nè ', 'dangcuh2105@gmail.com', NULL, '$2b$10$pv83YIyUySgHLgkFfoNRDetAIIu4C67B.5Fe8g5ptFPgKHgSozn/.', 'user'),
+(9, 'admin', 'admin@gmail.com', NULL, '$2b$10$TKaQzeDbIg8BbSsqimc9zuCeDRu8fdBxZ69uMGZWjzPWphsmaQyXm', 'admin'),
+(10, 'Nguyễn Văn A', 'vana@gmail.com', '012300312', '$2b$10$akNBnCPzmrantdHrMOlPL.Lv17xsu7TFrELP3J.xXeHzDITTvIp4O', 'user');
 
 -- --------------------------------------------------------
 
@@ -401,7 +397,7 @@ CREATE TABLE IF NOT EXISTS `showtime` (
   PRIMARY KEY (`id`),
   KEY `movie_id` (`movie_id`),
   KEY `room_id` (`theater_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=308 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=413 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Đang đổ dữ liệu cho bảng `showtime`
@@ -709,7 +705,7 @@ CREATE TABLE IF NOT EXISTS `showtime_seat` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `showtime_id` (`showtime_id`,`seat_id`),
   KEY `seat_id` (`seat_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=7022 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9941 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Đang đổ dữ liệu cho bảng `showtime_seat`
