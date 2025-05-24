@@ -135,7 +135,6 @@ async function getMoviesAdmin(token) {
 async function createMovieAdmin(movieData, token) {
     return fetchAPI('/admin/movies', 'POST', movieData, token);
 }
-
 /**
  * Cập nhật phim (dành cho admin).
  * @param {number} movieId - ID của phim cần cập nhật.

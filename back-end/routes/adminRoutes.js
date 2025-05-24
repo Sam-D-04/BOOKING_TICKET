@@ -14,5 +14,6 @@ router.delete('/movies/:id', protect, adminProtect, adminController.deleteMovie)
 router.get('/users', protect, adminProtect, adminController.getAllUsers);
 router.put('/users/:id', protect, adminProtect, adminController.updateUser);
 router.delete('/users/:id', protect, adminProtect, adminController.deleteUser);
+router.get('/users/:id', protect, adminProtect, adminController.getUserById);
 
 module.exports = router;

@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('Đang tải trang quản trị...');
         loadAdminPage();
     }else if (currentPath.includes('index.html') || currentPath === '/') {
-        
+
         fetchAndDisplayMovies(); 
     }
 
@@ -52,7 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (token && userName) {
             // Người dùng đã đăng nhập
             const userGreeting = document.createElement('span');
-            userGreeting.textContent = `Xin chào, ${userName}!`;
+            userGreeting.textContent = `Xin chào, ${userName}`;
             userGreeting.style.marginRight = '15px';
             userGreeting.style.fontWeight = 'bold';
             userAuthSection.appendChild(userGreeting);
@@ -72,7 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 localStorage.removeItem('jwtToken');
                 localStorage.removeItem('userName');
                 localStorage.removeItem('userRole'); // Xóa vai trò khi đăng xuất
-                displayMessage('Đã đăng xuất thành công!', 'success');
+                displayMessage('Đã đăng xuất thành công', 'success');
                 setTimeout(() => {
                     window.location.href = 'index.html'; // Chuyển hướng về trang chủ hoặc trang đăng nhập
                 }, 1000);
@@ -146,20 +146,29 @@ document.addEventListener('DOMContentLoaded', () => {
      * @param {object} movie - Đối tượng phim từ API.
      * @returns {HTMLElement} - Phần tử thẻ phim đã tạo.
      */
-    function createMovieCard(movie) {
+function createMovieCard(movie) {
         const card = document.createElement('div');
         card.className = 'movie-card';
+
+        // Tạo nút "Xem chi tiết & Đặt vé" có điều kiện
+        let detailButtonHtml = '';
+        if (movie.status === 'now_showing') { 
+            detailButtonHtml = `<a href="movie-detail.html?id=${movie.id}" class="btn-detail">Xem chi tiết & Đặt vé</a>`;
+        }
+
         card.innerHTML = `
             <div class="movie-card-poster">
-                <img src="${movie.poster_url || 'https://via.placeholder.com/250x380?text=No+Poster'}" alt="${movie.title}">
+                <img src="${movie.poster_url}" alt="${movie.title}">
             </div>
             <div class="movie-card-info">
                 <h3>${movie.title}</h3>
-                <p>Thể loại: ${movie.genre || 'Đang cập nhật'}</p> <p>Thời lượng: ${movie.duration ? movie.duration + ' phút' : 'Đang cập nhật'}</p> <a href="movie-detail.html?id=${movie.id}" class="btn-detail">Xem chi tiết & Đặt vé</a>
-            </div>
+                <p>Thể loại: ${movie.genre || 'Đang cập nhật'}</p>
+                <p>Thời lượng: ${movie.duration ? movie.duration + ' phút' : 'Đang cập nhật'}</p>
+                ${detailButtonHtml} </div>
         `;
         return card;
     }
+
 
     // --- Chức năng trang chi tiết phim (movie-detail.html) ---
     /**
@@ -483,7 +492,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const newBooking = await createBooking(bookingData, token);
                 console.log('API tạo đặt vé đã trả về:', newBooking);
                 if (newBooking && newBooking.booking_id) { // Giả định backend trả về booking_id
-                    displayMessage('Đặt vé thành công! Đang chuyển hướng...', 'success');
+                    displayMessage('Đặt vé thành công, đang chuyển hướng...', 'success');
                     // Lưu chi tiết đặt vé cho trang thanh toán
                     sessionStorage.setItem('currentBookingDetails', JSON.stringify({
                         bookingId: newBooking.booking_id,
@@ -644,7 +653,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.log('API thanh toán đã trả về:', paymentResult);
 
                 if (paymentResult && paymentResult.status === 'success') {
-                    displayMessage('Thanh toán thành công! Vé của bạn đã được xác nhận.', 'success');
+                    displayMessage('Thanh toán thành công, vé của bạn đã được xác nhận.', 'success');
                     sessionStorage.removeItem('currentBookingDetails'); // Xóa chi tiết đặt vé sau khi thanh toán
                     setTimeout(() => {
                         window.location.href = 'tickets.html';
@@ -862,7 +871,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         localStorage.setItem('jwtToken', result.token);
                         localStorage.setItem('userName', result.user?.name || 'Người dùng'); // Lưu tên người dùng
                         localStorage.setItem('userRole', result.user?.role || 'user'); // Lưu vai trò người dùng
-                        displayMessage('Đăng nhập thành công! Đang chuyển hướng...', 'success');
+                        displayMessage('Đăng nhập thành công, đang chuyển hướng...', 'success');
                         setTimeout(() => {
                             window.location.href = 'index.html'; // Chuyển hướng về trang chủ
                         }, 1000);
@@ -896,7 +905,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const result = await registerUser({ name, email, password, phone });
                     console.log('API đăng ký đã trả về:', result);
                     if (result && result.message) {
-                        displayMessage('Đăng ký thành công! Vui lòng đăng nhập.', 'success');
+                        displayMessage('Đăng ký thành công, vui lòng đăng nhập.', 'success');
                         setTimeout(() => {
                             window.location.href = 'login.html';
                         }, 1500);

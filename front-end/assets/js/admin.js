@@ -94,18 +94,6 @@ async function loadAdminPage() {
                         <input type="date" id="movieReleaseDate" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
                     </div>
                     <div>
-                        <label for="movieDirector" class="block text-gray-700 text-sm font-bold mb-2">Đạo diễn:</label>
-                        <input type="text" id="movieDirector" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-                    </div>
-                    <div>
-                        <label for="movieCast" class="block text-gray-700 text-sm font-bold mb-2">Diễn viên:</label>
-                        <input type="text" id="movieCast" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-                    </div>
-                    <div>
-                        <label for="movieImdbRating" class="block text-gray-700 text-sm font-bold mb-2">IMDb Rating:</label>
-                        <input type="number" step="0.1" id="movieImdbRating" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-                    </div>
-                    <div>
                         <label for="movieStatus" class="block text-gray-700 text-sm font-bold mb-2">Trạng thái:</label>
                         <select id="movieStatus" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
                             <option value="now_showing">Đang chiếu</option>
@@ -122,7 +110,7 @@ async function loadAdminPage() {
                 </div>
         </div>
 
-        <div id="usersManagement" class="hidden">
+         <div id="usersManagement" class="hidden">
             <h3 class="text-2xl font-semibold mb-4 text-gray-700">Quản lý Người dùng</h3>
             <div id="userFormContainer" class="hidden bg-white p-6 rounded-lg shadow-inner mb-6">
                 <h4 class="text-xl font-semibold mb-4">Sửa Người dùng</h4>
@@ -196,9 +184,6 @@ async function loadAdminPage() {
             duration: parseInt(document.getElementById('movieDuration').value),
             poster_url: document.getElementById('moviePosterUrl').value,
             release_date: document.getElementById('movieReleaseDate').value,
-            director: document.getElementById('movieDirector').value,
-            cast: document.getElementById('movieCast').value,
-            imdb_rating: parseFloat(document.getElementById('movieImdbRating').value),
             status: document.getElementById('movieStatus').value
         };
         const token = localStorage.getItem('jwtToken');
@@ -207,11 +192,11 @@ async function loadAdminPage() {
             if (movieId) {
                 // Cập nhật phim
                 await updateMovieAdmin(movieId, movieData, token);
-                displayMessage('Phim đã được cập nhật thành công!', 'success');
+                displayMessage('Phim đã được cập nhật thành công', 'success');
             } else {
                 // Tạo phim mới
                 await createMovieAdmin(movieData, token);
-                displayMessage('Phim mới đã được thêm thành công!', 'success');
+                displayMessage('Phim mới đã được thêm thành công', 'success');
             }
             document.getElementById('movieFormContainer').classList.add('hidden');
             loadMoviesForAdmin(); // Tải lại danh sách
@@ -350,6 +335,8 @@ async function loadMoviesForAdmin() {
 /**
  * Tải và hiển thị danh sách người dùng cho trang quản trị.
  */
+// admin.js
+
 async function loadUsersForAdmin() {
     console.log('Đang tải danh sách người dùng cho Admin...');
     const usersList = document.getElementById('usersList');
@@ -378,12 +365,12 @@ async function loadUsersForAdmin() {
                 usersList.appendChild(userCard);
             });
 
-            // Gắn sự kiện cho các nút Sửa/Xóa người dùng
+            // Gắn sự kiện cho các nút Sửa người dùng
             document.querySelectorAll('.edit-user-btn').forEach(button => {
                 button.addEventListener('click', async (e) => {
                     const userId = e.target.dataset.userId;
                     try {
-                        const user = await getUserProfileAdmin(userId, token); // Cần tạo API này nếu getUserProfile không đủ
+                        const user = await getUserProfileAdmin(userId, localStorage.getItem('jwtToken'));
                         if (user) {
                             document.getElementById('userId').value = user.id;
                             document.getElementById('userName').value = user.name;
@@ -403,6 +390,7 @@ async function loadUsersForAdmin() {
                 });
             });
 
+            // Gắn sự kiện cho các nút Xóa người dùng (đã đưa ra ngoài vòng lặp foreach trước đó)
             document.querySelectorAll('.delete-user-btn').forEach(button => {
                 button.addEventListener('click', async (e) => {
                     const userId = e.target.dataset.userId;

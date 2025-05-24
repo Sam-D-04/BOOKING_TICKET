@@ -13,11 +13,11 @@ exports.getAllMovies = async (req, res) => {
 };
 
 exports.createMovie = async (req, res) => {
-    const { title, description, genre, duration, poster_url, release_date, director, cast, imdb_rating, status } = req.body;
+    const { title, description, genre, duration, poster_url, release_date,status } = req.body;
     try {
-        const query = 'INSERT INTO movie (title, description, genre, duration, poster_url, release_date, director, cast, imdb_rating, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
-        const [result] = await db.query(query, [title, description, genre, duration, poster_url, release_date, director, cast, imdb_rating, status]);
-        res.status(201).json({ message: 'Phim đã được tạo thành công!', movieId: result.insertId });
+        const query = 'INSERT INTO movie (title, description, genre, duration, poster_url, release_date,  status) VALUES (?, ?, ?, ?, ?, ?, ?)';
+        const [result] = await db.query(query, [title, description, genre, duration, poster_url, release_date,  status]);
+        res.status(201).json({ message: 'Phim đã được tạo thành công', movieId: result.insertId });
     } catch (error) {
         console.error('Lỗi khi tạo phim:', error);
         res.status(500).json({ message: 'Lỗi server khi tạo phim.', error: error.message });
@@ -26,10 +26,10 @@ exports.createMovie = async (req, res) => {
 
 exports.updateMovie = async (req, res) => {
     const { id } = req.params;
-    const { title, description, genre, duration, poster_url, release_date, director, cast, imdb_rating, status } = req.body;
+    const { title, description, genre, duration, poster_url, release_date, status } = req.body;
     try {
-        const query = 'UPDATE movie SET title=?, description=?, genre=?, duration=?, poster_url=?, release_date=?, director=?, cast=?, imdb_rating=?, status=? WHERE id=?';
-        const [result] = await db.query(query, [title, description, genre, duration, poster_url, release_date, director, cast, imdb_rating, status, id]);
+        const query = 'UPDATE movie SET title=?, description=?, genre=?, duration=?, poster_url=?, release_date=?, status=? WHERE id=?';
+        const [result] = await db.query(query, [title, description, genre, duration, poster_url, release_date, status, id]);
         if (result.affectedRows === 0) {
             return res.status(404).json({ message: 'Không tìm thấy phim để cập nhật.' });
         }
@@ -58,7 +58,7 @@ exports.deleteMovie = async (req, res) => {
 exports.getAllUsers = async (req, res) => {
     try {
         // Không nên trả về mật khẩu
-        const [users] = await db.query('SELECT id, name, email, phone, role FROM registered_user'); // Hoặc is_admin
+        const [users] = await db.query('SELECT id, name, email, phone, role FROM registered_user');
         res.json(users);
     } catch (error) {
         console.error('Lỗi khi lấy tất cả người dùng:', error);
@@ -68,8 +68,8 @@ exports.getAllUsers = async (req, res) => {
 
 exports.updateUser = async (req, res) => {
     const { id } = req.params;
-    const { name, email, phone, role, password } = req.body; // Hoặc is_admin
-    let updateFields = { name, email, phone, role }; // Hoặc is_admin
+    const { name, email, phone, role, password } = req.body; 
+    let updateFields = { name, email, phone, role }; 
 
     try {
         if (password) {
@@ -79,7 +79,7 @@ exports.updateUser = async (req, res) => {
 
         const setClauses = Object.keys(updateFields).map(key => `${key} = ?`).join(', ');
         const values = Object.values(updateFields);
-        values.push(id); // Thêm ID vào cuối cho mệnh đề WHERE
+        values.push(id); 
 
         const query = `UPDATE registered_user SET ${setClauses} WHERE id = ?`;
         const [result] = await db.query(query, values);
@@ -105,5 +105,22 @@ exports.deleteUser = async (req, res) => {
     } catch (error) {
         console.error('Lỗi khi xóa người dùng:', error);
         res.status(500).json({ message: 'Lỗi server khi xóa người dùng.', error: error.message });
+    }
+};
+
+exports.getUserById = async (req, res) => {
+    const { id } = req.params; // Lấy ID từ URL
+    try {
+        const query = 'SELECT id, name, email, phone, role FROM registered_user WHERE id = ?';
+        const [users] = await db.query(query, [id]);
+
+        if (users.length === 0) {
+            return res.status(404).json({ message: 'Không tìm thấy người dùng.', user_id: id });
+        }
+        res.json(users[0]);
+    } catch (error) {
+        console.error('Lỗi server khi lấy người dùng theo ID:', error);
+        // Rất quan trọng: Luôn trả về JSON khi có lỗi server
+        res.status(500).json({ message: 'Lỗi server khi lấy người dùng.', error: error.message });
     }
 };
