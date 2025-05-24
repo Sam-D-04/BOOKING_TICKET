@@ -35,13 +35,13 @@ async function fetchAPI(endpoint, method = 'GET', body = null, token = null) {
         const data = await response.json();
 
         if (!response.ok) {
-            console.error('Lỗi API:', data.message || response.statusText);
-            throw new Error(data.message || `Lỗi ${response.status}`);
+           displayMessage(`Lỗi API: ${data.message || response.statusText}`, 'error');
+            throw new Error(data.message || response.statusText);
         }
         return data;
     } catch (error) {
         console.error(`Lỗi khi gọi API ${method} ${endpoint}:`, error);   
-        DisplayMessage(error.message || 'Không thể kết nối đến server.', 'error');
+        displayMessage(error.message || 'Không thể kết nối đến server.', 'error');
         throw error; 
     }
 }
@@ -115,3 +115,94 @@ async function processPayment(paymentData, token) {
     return fetchAPI('/payments/process', 'POST', paymentData, token);
 }
 
+// --- Admin Movie API Calls ---
+
+/**
+ * Lấy tất cả phim (dành cho admin).
+ * @param {string} token - JWT token của admin.
+ * @returns {Promise<Array<object>>} - Danh sách phim.
+ */
+async function getMoviesAdmin(token) {
+    return fetchAPI('/admin/movies', 'GET', null, token);
+}
+
+/**
+ * Tạo phim mới (dành cho admin).
+ * @param {object} movieData - Dữ liệu phim.
+ * @param {string} token - JWT token của admin.
+ * @returns {Promise<object>} - Phim mới được tạo.
+ */
+async function createMovieAdmin(movieData, token) {
+    return fetchAPI('/admin/movies', 'POST', movieData, token);
+}
+
+/**
+ * Cập nhật phim (dành cho admin).
+ * @param {number} movieId - ID của phim cần cập nhật.
+ * @param {object} movieData - Dữ liệu phim mới.
+ * @param {string} token - JWT token của admin.
+ * @returns {Promise<object>} - Phim đã cập nhật.
+ */
+async function updateMovieAdmin(movieId, movieData, token) {
+    return fetchAPI(`/admin/movies/${movieId}`, 'PUT', movieData, token);
+}
+
+/**
+ * Xóa phim (dành cho admin).
+ * @param {number} movieId - ID của phim cần xóa.
+ * @param {string} token - JWT token của admin.
+ * @returns {Promise<null>}
+ */
+async function deleteMovieAdmin(movieId, token) {
+    return fetchAPI(`/admin/movies/${movieId}`, 'DELETE', null, token);
+}
+
+// --- Admin User API Calls ---
+
+/**
+ * Lấy tất cả người dùng (dành cho admin).
+ * @param {string} token - JWT token của admin.
+ * @returns {Promise<Array<object>>} - Danh sách người dùng.
+ */
+async function getUsersAdmin(token) {
+    return fetchAPI('/admin/users', 'GET', null, token);
+}
+
+/**
+ * Lấy thông tin profile của một người dùng cụ thể (dành cho admin).
+ * @param {number} userId - ID của người dùng.
+ * @param {string} token - JWT token của admin.
+ * @returns {Promise<object>} - Thông tin profile người dùng.
+ */
+async function getUserProfileAdmin(userId, token) {
+    return fetchAPI(`/admin/users/${userId}`, 'GET', null, token);
+}
+
+/**
+ * Cập nhật thông tin người dùng (dành cho admin).
+ * @param {number} userId - ID của người dùng cần cập nhật.
+ * @param {object} userData - Dữ liệu người dùng mới.
+ * @param {string} token - JWT token của admin.
+ * @returns {Promise<object>} - Người dùng đã cập nhật.
+ */
+async function updateUserAdmin(userId, userData, token) {
+    return fetchAPI(`/admin/users/${userId}`, 'PUT', userData, token);
+}
+
+/**
+ * Xóa người dùng (dành cho admin).
+ * @param {number} userId - ID của người dùng cần xóa.
+ * @param {string} token - JWT token của admin.
+ * @returns {Promise<null>}
+ */
+async function deleteUserAdmin(userId, token) {
+    return fetchAPI(`/admin/users/${userId}`, 'DELETE', null, token);
+}
+
+// Bạn cũng cần đảm bảo hàm getMovieById (dùng để sửa phim) có sẵn trong api.js,
+// nếu chưa có thì thêm vào (có thể đã có trong các lần hướng dẫn trước):
+/*
+async function getMovieById(movieId) {
+    return fetchAPI(`/movies/${movieId}`, 'GET');
+}
+*/

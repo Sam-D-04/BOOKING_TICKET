@@ -16,7 +16,7 @@ const movieRoutes = require('./routes/movieRoutes');
 const authRoutes = require('./routes/authRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
 const paymentRoutes = require('./routes/paymentRoutes'); 
-
+const adminRoutes = require('./routes/adminRoutes');
 app.get('/', (req, res) => {
     res.send('Chào mừng đến với API Đặt Vé Xem Phim!');
 });
@@ -26,6 +26,7 @@ app.use('/api/movies', movieRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Xử lý lỗi chung (ví dụ)
 app.use((err, req, res, next) => {

@@ -71,8 +71,8 @@ exports.loginUser = async (req, res) => {
     }
 
     try {
-        // Tìm người dùng bằng email
-        const query = 'SELECT id, name, email, password FROM registered_user WHERE email = ?';
+        // Tìm người dùng bằng email và lấy cả trường 'role' (hoặc 'is_admin')
+        const query = 'SELECT id, name, email, password, role FROM registered_user WHERE email = ?'; // Hoặc SELECT ..., is_admin FROM ...
         const [users] = await db.query(query, [email]);
 
         if (users.length === 0) {
@@ -81,14 +81,12 @@ exports.loginUser = async (req, res) => {
 
         const user = users[0];
 
-        // So sánh mật khẩu đã nhập với mật khẩu đã mã hóa trong DB
         const isMatch = await bcrypt.compare(password, user.password);
 
         if (!isMatch) {
             return res.status(401).json({ message: 'Email hoặc mật khẩu không đúng.' });
         }
 
-        // Nếu thông tin hợp lệ, tạo token
         const token = generateToken(user.id, user.name, user.email);
 
         res.json({
@@ -98,6 +96,7 @@ exports.loginUser = async (req, res) => {
                 id: user.id,
                 name: user.name,
                 email: user.email,
+                role: user.role, 
             },
         });
     } catch (error) {

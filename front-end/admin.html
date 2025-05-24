@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link href="https://cdn.tailwindcss.com" rel="stylesheet">
+    <style>
+        /* Các CSS tùy chỉnh nếu có */
+        .message-area {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            border-radius: 8px;
+            color: white;
+            z-index: 1000;
+            display: none; /* Mặc định ẩn */
+        }
+        .message-area.success { background-color: #4CAF50; }
+        .message-area.error { background-color: #f44336; }
+        .message-area.info { background-color: #2196F3; }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans leading-normal tracking-normal">
+
+    <div id="messageArea" class="message-area"></div>
+
+    <header class="bg-gray-800 text-white p-4 shadow-md">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-3xl font-bold">Admin Dashboard</h1>
+            <nav>
+                <ul class="flex space-x-4">
+                    <li><a href="index.html" class="hover:text-gray-300 transition duration-300">Trang chủ</a></li>
+                    <li><button id="logoutBtn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-1 px-3 rounded-lg transition duration-300">Đăng xuất</button></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container mx-auto p-6">
+        <div id="adminContent" class="bg-white p-8 rounded-lg shadow-lg">
+            <p class="text-center text-gray-500">Đang tải nội dung quản trị...</p>
+        </div>
+    </main>
+
+    <script src="/front-end/assets/js/api.js"></script>
+    <script src="/front-end/assets/js/admin.js"></script>
+    <script src="/front-end/assets/js/main.js"></script>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+</body>
+</html>

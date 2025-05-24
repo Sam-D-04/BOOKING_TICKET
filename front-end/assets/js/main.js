@@ -26,6 +26,12 @@ document.addEventListener('DOMContentLoaded', () => {
     } else if (path.includes('payment.html')) {
         console.log('Đang tải trang thanh toán...');
         loadPaymentPage();
+    } else if (path.includes('admin.html')) { 
+        console.log('Đang tải trang quản trị...');
+        loadAdminPage();
+    }else if (currentPath.includes('index.html') || currentPath === '/') {
+        
+        fetchAndDisplayMovies(); 
     }
 
     /**
@@ -39,22 +45,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const token = localStorage.getItem('jwtToken');
         const userName = localStorage.getItem('userName');
+        const userRole = localStorage.getItem('userRole'); // Lấy vai trò người dùng
 
         userAuthSection.innerHTML = ''; // Xóa các nút hiện có
 
         if (token && userName) {
             // Người dùng đã đăng nhập
             const userGreeting = document.createElement('span');
-            userGreeting.textContent = `Xin chào, ${userName}`;
+            userGreeting.textContent = `Xin chào, ${userName}!`;
             userGreeting.style.marginRight = '15px';
             userGreeting.style.fontWeight = 'bold';
             userAuthSection.appendChild(userGreeting);
+
+            // Nếu là admin, hiển thị nút Admin Dashboard
+            if (userRole === 'admin') {
+                const adminDashboardButton = document.createElement('button');
+                adminDashboardButton.textContent = 'Admin Dashboard';
+                adminDashboardButton.className = 'bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out mr-2';
+                adminDashboardButton.onclick = () => { location.href = 'admin.html'; };
+                userAuthSection.appendChild(adminDashboardButton);
+            }
 
             const logoutButton = document.createElement('button');
             logoutButton.textContent = 'Đăng xuất';
             logoutButton.onclick = () => {
                 localStorage.removeItem('jwtToken');
                 localStorage.removeItem('userName');
+                localStorage.removeItem('userRole'); // Xóa vai trò khi đăng xuất
                 displayMessage('Đã đăng xuất thành công!', 'success');
                 setTimeout(() => {
                     window.location.href = 'index.html'; // Chuyển hướng về trang chủ hoặc trang đăng nhập
@@ -116,7 +133,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     container.appendChild(movieCard);
                 });
             } else {
-                container.innerHTML = '<p class-center">Không có phim nào để hiển thị.</p>';
+                container.innerHTML = '<p class="text-center">Không có phim nào để hiển thị.</p>';
             }
         } catch (error) {
             // Xử lý lỗi hiện được thực hiện bởi hàm gọi (loadHomePageContent)
@@ -134,7 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
         card.className = 'movie-card';
         card.innerHTML = `
             <div class="movie-card-poster">
-                <img src="${movie.poster_url}" alt="${movie.title}">
+                <img src="${movie.poster_url || 'https://via.placeholder.com/250x380?text=No+Poster'}" alt="${movie.title}">
             </div>
             <div class="movie-card-info">
                 <h3>${movie.title}</h3>
@@ -171,7 +188,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('movieDetailPageTitle').textContent = movie.title + ' - Galaxy Cine';
                 movieDetailContainer.innerHTML = `
                     <div class="movie-detail-poster">
-                        <img src="${movie.poster_url}" alt="${movie.title}">
+                        <img src="${movie.poster_url || 'https://via.placeholder.com/400x600?text=No+Poster'}" alt="${movie.title}">
                     </div>
                     <div class="movie-detail-info">
                         <h1>${movie.title}</h1>
@@ -750,7 +767,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     ticketCard.className = 'ticket-card';
                     ticketCard.innerHTML = `
                         <div class="ticket-card-poster">
-                            <img src="${ticket.poster_url}" alt="${ticket.movie_title}">
+                            <img src="${ticket.poster_url || 'https://via.placeholder.com/120x180?text=Movie+Poster'}" alt="${ticket.movie_title}">
                         </div>
                         <div class="ticket-info">
                             <h3>${ticket.movie_title || 'Đang cập nhật'}</h3>
@@ -762,7 +779,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <p><strong>Tổng tiền:</strong> ${ticket.total_amount ? parseFloat(ticket.total_amount).toLocaleString('vi-VN') + ' VND' : 'Đang cập nhật'}</p>
                             <p><strong>Trạng thái:</strong> <span style="color: ${ticket.booking_status === 'confirmed' ? 'var(--success-color)' : 'var(--danger-color)'}">${ticket.booking_status === 'confirmed' ? 'Đã xác nhận' : (ticket.booking_status === 'pending' ? 'Đang chờ thanh toán' : 'Đang cập nhật')}</span></p>
                             ${ticket.booking_status === 'pending' ? `
-                               <button class="btn-pay-now bg-[#f17300] hover:bg-[#d86200] text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out mt-3"
+                                <button class="btn-pay-now bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out mt-3"
                                     data-booking-id="${ticket.booking_id}"
                                     data-movie-title="${ticket.movie_title}"
                                     data-cinema-name="${ticket.theater_name}"
@@ -844,6 +861,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         // Cập nhật để lấy tên từ result.user.name
                         localStorage.setItem('jwtToken', result.token);
                         localStorage.setItem('userName', result.user?.name || 'Người dùng'); // Lưu tên người dùng
+                        localStorage.setItem('userRole', result.user?.role || 'user'); // Lưu vai trò người dùng
                         displayMessage('Đăng nhập thành công! Đang chuyển hướng...', 'success');
                         setTimeout(() => {
                             window.location.href = 'index.html'; // Chuyển hướng về trang chủ
