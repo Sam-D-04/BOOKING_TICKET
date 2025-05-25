@@ -80,8 +80,7 @@ async function registerUser(userData) { // {name, email, password, phone}
  * @returns {Promise<object>} - Thông tin ghế và sơ đồ phòng
  */
 async function getSeatsForShowtime(showtimeId, token) {
-    // API này cần được tạo ở backend, ví dụ: /bookings/showtimes/:showtimeId/seats
-    return fetchAPI(`/bookings/showtimes/${showtimeId}/seats`, 'GET', null, token);
+    return fetchAPI(`/bookings/${showtimeId}/seats`, 'GET', null, token);
 }
 
 /**
@@ -101,6 +100,17 @@ async function createBooking(bookingData, token) {
  */
 async function getUserTickets(token) {
     return fetchAPI('/bookings/my-tickets', 'GET', null, token);
+}
+
+/**
+ * Hủy một đơn đặt vé cụ thể.
+ * @param {number} bookingId - ID của đơn đặt vé cần hủy.
+ * @param {string} token - JWT token của người dùng.
+ * @returns {Promise<object>} - Kết quả từ server.
+ */
+async function cancelBooking(bookingId, token) {
+    // API endpoint của bạn là DELETE /api/bookings/:bookingId
+    return fetchAPI(`/bookings/${bookingId}`, 'DELETE', null, token);
 }
 
 // --- Payment API Calls (Giả lập) ---
@@ -198,10 +208,8 @@ async function deleteUserAdmin(userId, token) {
     return fetchAPI(`/admin/users/${userId}`, 'DELETE', null, token);
 }
 
-// Bạn cũng cần đảm bảo hàm getMovieById (dùng để sửa phim) có sẵn trong api.js,
-// nếu chưa có thì thêm vào (có thể đã có trong các lần hướng dẫn trước):
-/*
+
+
 async function getMovieById(movieId) {
     return fetchAPI(`/movies/${movieId}`, 'GET');
 }
-*/

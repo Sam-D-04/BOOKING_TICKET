@@ -1,3 +1,37 @@
+// Biến toàn cục để lưu trữ interval của đồng hồ đếm ngược cho trang booking.html (sẽ không dùng nữa)
+// Giữ lại khai báo để tránh lỗi nếu có code khác vô tình tham chiếu hoặc nếu bạn muốn tái sử dụng sau này.
+let countdownInterval; 
+
+// Map toàn cục để lưu trữ các interval cho từng bookingId trên trang vé của tôi
+const pendingBookingIntervals = new Map();
+
+function createMessageArea() {
+    const existingArea = document.getElementById('messageArea');
+    if (existingArea) return existingArea;
+
+    const area = document.createElement('div');
+    area.id = 'messageArea';
+    area.className = 'message-area';
+    area.style.display = 'none';
+    document.body.insertBefore(area, document.body.firstChild);
+    return area;
+}
+
+function displayMessage(message, type = 'info', duration = 3000) {
+    const messageArea = document.getElementById('messageArea') || createMessageArea();
+    if (!messageArea) return;
+
+    messageArea.textContent = message;
+    messageArea.className = `message-area ${type}`; // success, error, info
+    messageArea.style.display = 'block';
+
+    if (duration > 0) {
+        setTimeout(() => {
+            messageArea.style.display = 'none';
+        }, duration);
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     // Kiểm tra trạng thái đăng nhập của người dùng mỗi khi trang tải
     updateUserAuthSection();
@@ -26,12 +60,9 @@ document.addEventListener('DOMContentLoaded', () => {
     } else if (path.includes('payment.html')) {
         console.log('Đang tải trang thanh toán...');
         loadPaymentPage();
-    } else if (path.includes('admin.html')) { 
+    } else if (path.includes('admin.html')) { // Thêm điều kiện cho trang admin
         console.log('Đang tải trang quản trị...');
         loadAdminPage();
-    }else if (currentPath.includes('index.html') || currentPath === '/') {
-
-        fetchAndDisplayMovies(); 
     }
 
     /**
@@ -52,7 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (token && userName) {
             // Người dùng đã đăng nhập
             const userGreeting = document.createElement('span');
-            userGreeting.textContent = `Xin chào, ${userName}`;
+            userGreeting.textContent = `Xin chào, ${userName}!`;
             userGreeting.style.marginRight = '15px';
             userGreeting.style.fontWeight = 'bold';
             userAuthSection.appendChild(userGreeting);
@@ -72,7 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 localStorage.removeItem('jwtToken');
                 localStorage.removeItem('userName');
                 localStorage.removeItem('userRole'); // Xóa vai trò khi đăng xuất
-                displayMessage('Đã đăng xuất thành công', 'success');
+                displayMessage('Đã đăng xuất thành công!', 'success');
                 setTimeout(() => {
                     window.location.href = 'index.html'; // Chuyển hướng về trang chủ hoặc trang đăng nhập
                 }, 1000);
@@ -146,29 +177,29 @@ document.addEventListener('DOMContentLoaded', () => {
      * @param {object} movie - Đối tượng phim từ API.
      * @returns {HTMLElement} - Phần tử thẻ phim đã tạo.
      */
-function createMovieCard(movie) {
+    function createMovieCard(movie) {
         const card = document.createElement('div');
         card.className = 'movie-card';
 
         // Tạo nút "Xem chi tiết & Đặt vé" có điều kiện
         let detailButtonHtml = '';
-        if (movie.status === 'now_showing') { 
+        if (movie.status === 'now_showing') { // Chỉ hiển thị nút nếu phim đang chiếu
             detailButtonHtml = `<a href="movie-detail.html?id=${movie.id}" class="btn-detail">Xem chi tiết & Đặt vé</a>`;
         }
 
         card.innerHTML = `
             <div class="movie-card-poster">
-                <img src="${movie.poster_url}" alt="${movie.title}">
+                <img src="${movie.poster_url || 'https://via.placeholder.com/250x380?text=No+Poster'}" alt="${movie.title}">
             </div>
             <div class="movie-card-info">
                 <h3>${movie.title}</h3>
                 <p>Thể loại: ${movie.genre || 'Đang cập nhật'}</p>
                 <p>Thời lượng: ${movie.duration ? movie.duration + ' phút' : 'Đang cập nhật'}</p>
-                ${detailButtonHtml} </div>
+                ${detailButtonHtml}
+            </div>
         `;
         return card;
     }
-
 
     // --- Chức năng trang chi tiết phim (movie-detail.html) ---
     /**
@@ -342,18 +373,15 @@ function createMovieCard(movie) {
             document.getElementById('bookingShowtimeDate').textContent = 'Invalid Date';
         }
 
-
         const seatMapContainer = document.getElementById('seatMap');
         const selectedSeatsInfo = document.getElementById('selectedSeatsInfo');
         const totalAmountElement = document.getElementById('totalAmount');
         const btnConfirmBooking = document.getElementById('btnConfirmBooking');
+        // const countdownElement = document.getElementById('countdownTimer'); // Đã loại bỏ đồng hồ đếm ngược trên trang booking
 
         let selectedSeats = [];
         let currentTicketPricePerSeat = 0; // Khởi tạo giá động
 
-        /**
-         * Cập nhật tóm tắt đặt vé (ghế đã chọn và tổng số tiền).
-         */
         function updateBookingSummary() {
             if (selectedSeats.length > 0 && currentTicketPricePerSeat > 0) {
                 selectedSeatsInfo.textContent = selectedSeats.map(seat => seat.label).join(', ');
@@ -370,7 +398,7 @@ function createMovieCard(movie) {
             const seatData = await getSeatsForShowtime(showtimeId, token);
             console.log('API dữ liệu ghế đã trả về:', seatData);
 
-            // Điều chỉnh kiểm tra điều kiện và trích xuất biến cho cấu trúc JSON mới
+       
             if (seatData && seatData.seat_layout && seatData.num_rows && seatData.seats_per_row) {
                 seatMapContainer.innerHTML = ''; // Xóa thông báo tải
 
@@ -443,8 +471,6 @@ function createMovieCard(movie) {
                                 });
                             }
                         } else {
-                             // Xử lý các trường hợp khi một ghế trong bố cục lưới có thể không có dữ liệu tương ứng
-                             // Điều này có thể xảy ra nếu num_rows/seats_per_row không khớp hoàn hảo với seat_layout
                             seatDiv.classList.add('unavailable'); // Coi là không có sẵn nếu không có dữ liệu
                             seatDiv.title = 'Không có dữ liệu ghế';
                             seatDiv.textContent = 'X'; // Đánh dấu ghế bị thiếu
@@ -484,7 +510,7 @@ function createMovieCard(movie) {
                 showtimeId: parseInt(showtimeId),
                 seatIds: selectedSeats.map(s => parseInt(s.id)),
                 totalAmount: selectedSeats.length * currentTicketPricePerSeat,
-                paymentMethod: paymentMethod // Bao gồm phương thức thanh toán trong dữ liệu đặt vé
+                paymentMethod: paymentMethod 
             };
 
             try {
@@ -492,7 +518,7 @@ function createMovieCard(movie) {
                 const newBooking = await createBooking(bookingData, token);
                 console.log('API tạo đặt vé đã trả về:', newBooking);
                 if (newBooking && newBooking.booking_id) { // Giả định backend trả về booking_id
-                    displayMessage('Đặt vé thành công, đang chuyển hướng...', 'success');
+                    displayMessage('Đặt vé thành công! Đang chuyển hướng...', 'success');
                     // Lưu chi tiết đặt vé cho trang thanh toán
                     sessionStorage.setItem('currentBookingDetails', JSON.stringify({
                         bookingId: newBooking.booking_id,
@@ -501,9 +527,13 @@ function createMovieCard(movie) {
                         cinemaName: selectedShowtimeDetails.cinemaName,
                         showtimeTime: selectedShowtimeDetails.startTime, // Lưu chuỗi gốc
                         selectedSeatsLabels: selectedSeats.map(s => s.label).join(', '),
-                        paymentMethod: paymentMethod // Lưu phương thức thanh toán để sử dụng sau
+                        paymentMethod: paymentMethod, 
+                        bookingTime: newBooking.booking_time 
                     }));
                     sessionStorage.removeItem('selectedShowtimeDetails'); // Xóa chi tiết suất chiếu
+
+                    // KHÔNG CÓ LOGIC DỪNG ĐỒNG HỒ ĐẾM NGƯỢC TRÊN TRANG BOOKING NỮA
+                    // clearInterval(countdownInterval); 
 
                     // Nếu phương thức thanh toán là 'at_counter', chuyển hướng trực tiếp đến trang vé
                     if (paymentMethod === 'at_counter') {
@@ -641,23 +671,19 @@ function createMovieCard(movie) {
                     displayMessage('Mã CVV không hợp lệ (3 hoặc 4 chữ số).', 'error');
                     return;
                 }
-
-                // Trong một ứng dụng thực tế, các chi tiết này sẽ được gửi đến một cổng thanh toán an toàn,
-                // không trực tiếp đến backend của bạn. Đây là một mô phỏng đơn giản.
-                paymentData.cardDetails = { cardNumber, expiryDate, cvv };
             }
 
             try {
-                displayMessage('Đang xử lý thanh toán...', 'info', 0); // Thông báo không giới hạn thời gian
+                displayMessage('Đang xử lý thanh toán...', 'info', 0); 
                 const paymentResult = await processPayment(paymentData, token);
                 console.log('API thanh toán đã trả về:', paymentResult);
 
-                if (paymentResult && paymentResult.status === 'success') {
-                    displayMessage('Thanh toán thành công, vé của bạn đã được xác nhận.', 'success');
-                    sessionStorage.removeItem('currentBookingDetails'); // Xóa chi tiết đặt vé sau khi thanh toán
+                if (paymentResult.paymentStatus === 'completed') {
+                    displayMessage('Thanh toán thành công, đưa mã QR bên phải cho nhân viên để xác nhận', 'completed');
+                    sessionStorage.removeItem('currentBookingDetails'); 
                     setTimeout(() => {
                         window.location.href = 'tickets.html';
-                    }, 2000);
+                    }, 3000);
                 } else {
                     displayMessage(paymentResult.message || 'Thanh toán thất bại. Vui lòng thử lại.', 'error');
                 }
@@ -729,124 +755,195 @@ function createMovieCard(movie) {
     /**
      * Tải và hiển thị các vé đã đặt của người dùng.
      */
-    async function loadUserTicketsPage() {
-        const token = localStorage.getItem('jwtToken');
-        const ticketsListContainer = document.getElementById('userTicketsList');
-        const noTicketsMessage = document.getElementById('noTicketsMessage');
+// main.js
 
-        if (!token) {
-            displayMessage('Bạn cần đăng nhập để xem vé của mình.', 'info');
-            ticketsListContainer.innerHTML = '<p class="text-center">Vui lòng <a href="login.html">đăng nhập</a> để xem vé đã đặt.</p>';
-            return;
+// ... (các import và các hàm khác của bạn, bao gồm displayMessage và createMessageArea) ...
+
+async function loadUserTicketsPage() {
+    const token = localStorage.getItem('jwtToken');
+    const ticketsListContainer = document.getElementById('userTicketsList');
+    const noTicketsMessage = document.getElementById('noTicketsMessage');
+
+    // **KIỂM TRA NULL NGAY LẬP TỨC CHO CÁC PHẦN TỬ DOM QUAN TRỌNG**
+    if (!ticketsListContainer) {
+        console.error("Lỗi: Không tìm thấy phần tử 'userTicketsList'. Đảm bảo tickets.html có id này.");
+        displayMessage('Lỗi tải trang: Không tìm thấy vùng hiển thị vé.', 'error');
+        return; // Dừng hàm nếu không tìm thấy container chính
+    }
+    // noTicketsMessage có thể là null, chúng ta sẽ kiểm tra nó trước khi sử dụng
+    // nhưng không dừng toàn bộ hàm vì nó là phần phụ trợ.
+
+    if (!token) {
+        displayMessage('Bạn cần đăng nhập để xem vé của mình.', 'info');
+        ticketsListContainer.innerHTML = '<p class="text-center">Vui lòng <a href="login.html">đăng nhập</a> để xem vé đã đặt.</p>';
+        if (noTicketsMessage) {
+            noTicketsMessage.style.display = 'none'; // Ẩn thông báo "không có vé"
         }
+        return;
+    }
 
-        try {
-            noTicketsMessage.classList.add('hidden'); // Ban đầu ẩn thông báo "không có vé"
-            ticketsListContainer.innerHTML = '<p class="text-center">Đang tải vé của bạn...</p>';
-            const tickets = await getUserTickets(token);
-            console.log('API vé người dùng đã trả về:', tickets);
+    try {
+        if (noTicketsMessage) {
+            noTicketsMessage.style.display = 'none'; // Ban đầu ẩn thông báo "không có vé"
+        }
+        ticketsListContainer.innerHTML = '<p class="text-center">Đang tải vé của bạn...</p>';
 
-            if (tickets && tickets.length > 0) {
-                ticketsListContainer.innerHTML = ''; // Xóa thông báo tải
-                tickets.forEach(ticket => {
-                    console.log('Đang xử lý vé:', ticket); // Đã thêm log này để gỡ lỗi cấu trúc vé
+        const tickets = await getUserTickets(token);
+        console.log('API vé người dùng đã trả về:', tickets);
 
-                    // Đã sửa: Sử dụng ticket.showtime_date_time
-                    const ticketShowtimeTime = ticket.showtime_date_time ? new Date(ticket.showtime_date_time) : null;
+        if (tickets && tickets.length > 0) {
+            ticketsListContainer.innerHTML = ''; // Xóa thông báo tải
+            tickets.forEach(ticket => {
+                console.log('Đang xử lý vé:', ticket);
 
-                    // Định dạng nội dung cho ghi chú QR code cho "Thanh toán tại quầy"
-                    let qrContentForPendingTicket = '';
-                    if (ticket.booking_status === 'pending') {
-                        const movieTitle = ticket.movie_title || 'Phim';
-                        let formattedTime = 'Khong ro gio';
-                        let formattedDate = 'Khong ro ngay';
-                        if (ticketShowtimeTime && !isNaN(ticketShowtimeTime)) {
-                            formattedTime = ticketShowtimeTime.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }).replace(':', 'h');
-                            formattedDate = ticketShowtimeTime.toLocaleDateString('vi-VN').replace(/\//g, '-');
-                        }
-                        const theaterName = ticket.theater_name || 'Rap';
-                        const seatsBooked = ticket.seats_booked || 'Ghe';
-                        const totalAmount = ticket.total_amount ? parseFloat(ticket.total_amount).toLocaleString('vi-VN') : '0';
+                const ticketShowtimeTime = ticket.showtime_date_time ? new Date(ticket.showtime_date_time) : null;
 
-                        qrContentForPendingTicket = `${movieTitle}-${formattedTime}-${theaterName}-${seatsBooked}-${totalAmount}VND`;
+                let qrContentForPendingTicket = '';
+                if (ticket.booking_status === 'pending') {
+                    const movieTitle = ticket.movie_title || 'Phim';
+                    let formattedTime = 'Không rõ giờ';
+                    let formattedDate = 'Không rõ ngày';
+                    if (ticketShowtimeTime && !isNaN(ticketShowtimeTime)) {
+                        formattedTime = ticketShowtimeTime.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }).replace(':', 'h');
+                        formattedDate = ticketShowtimeTime.toLocaleDateString('vi-VN').replace(/\//g, '-');
+                    }
+                    const theaterName = ticket.theater_name || 'Rạp';
+                    const seatsBooked = ticket.seats_booked || 'Ghế';
+                    const totalAmount = ticket.total_amount ? parseFloat(ticket.total_amount).toLocaleString('vi-VN') : '0';
+
+                    qrContentForPendingTicket = `${movieTitle}-${formattedTime}-${theaterName}-${seatsBooked}-${totalAmount}VND`;
+                }
+
+                const ticketCard = document.createElement('div');
+                ticketCard.className = 'ticket-card';
+                ticketCard.innerHTML = `
+                    <div class="ticket-card-poster">
+                        <img src="${ticket.poster_url || 'https://via.placeholder.com/120x180?text=Movie+Poster'}" alt="${ticket.movie_title}">
+                    </div>
+                    <div class="ticket-info">
+                        <h3>${ticket.movie_title || 'Đang cập nhật'}</h3>
+                        <p><strong>Ngày chiếu:</strong> ${ticketShowtimeTime && !isNaN(ticketShowtimeTime) ? ticketShowtimeTime.toLocaleDateString('vi-VN') : 'Đang cập nhật'}</p>
+                        <p><strong>Giờ chiếu:</strong> ${ticketShowtimeTime && !isNaN(ticketShowtimeTime) ? ticketShowtimeTime.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : 'Đang cập nhật'}</p>
+                        <p><strong>Rạp:</strong> ${ticket.theater_name || 'Đang cập nhật'}</p>
+                        <p><strong>Phòng:</strong> ${ticket.theater_name || 'Đang cập nhật'}</p>
+                        <p><strong>Ghế:</strong> ${ticket.seats_booked || 'Đang cập nhật'}</p>
+                        <p><strong>Tổng tiền:</strong> ${ticket.total_amount ? parseFloat(ticket.total_amount).toLocaleString('vi-VN') + ' VND' : 'Đang cập nhật'}</p>
+                        <p><strong>Trạng thái:</strong> <span style="color: ${ticket.booking_status === 'confirmed' ? 'var(--success-color)' : (ticket.booking_status === 'pending' ? 'var(--pending-color)' : 'var(--danger-color)')}">${ticket.booking_status === 'confirmed' ? 'Đã xác nhận' : (ticket.booking_status === 'pending' ? 'Đang chờ thanh toán' : 'Đã hủy')}</span></p>
+                        ${ticket.booking_status === 'pending' ? `
+                            <div class="flex gap-3 mt-3">
+                                <button class="btn-pay-now bg-[#f17300] hover:bg-[#d86200] text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out"
+                                data-booking-id="${ticket.booking_id}"
+                                data-movie-title="${ticket.movie_title}"
+                                data-cinema-name="${ticket.theater_name}"
+                                data-showtime-time="${ticket.showtime_date_time}"
+                                data-seats-booked="${ticket.seats_booked}"
+                                data-total-amount="${ticket.total_amount}"
+                                data-poster-url="${ticket.poster_url}">
+                                Thanh toán ngay
+                                </button>
+                                <button class="btn-cancel-ticket bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out"
+                                data-booking-id="${ticket.booking_id}"
+                                data-movie-title="${ticket.movie_title}">
+                                Hủy vé
+                                </button>
+                            </div>
+                        ` : (ticket.booking_status === 'confirmed' ? `
+                        ` : `
+                        `)}
+                    </div>
+                    <div class="ticket-qr-code p-4 flex items-center justify-center">
+                        ${ticket.booking_status === 'confirmed' ?
+                            generateGenericQrCodeHtml('vé này được trả tiền rồi nha, legit legit', 150) : ''}
+                        ${ticket.booking_status === 'pending' ?
+                            generateGenericQrCodeHtml(qrContentForPendingTicket, 150) : ''}
+                    </div>
+                `;
+                ticketsListContainer.appendChild(ticketCard);
+            });
+
+            // Thêm trình lắng nghe sự kiện cho các nút "Thanh toán ngay" sau khi chúng được hiển thị
+            document.querySelectorAll('.btn-pay-now').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const btn = e.target;
+                    const bookingId = btn.dataset.bookingId;
+                    const movieTitle = btn.dataset.movieTitle;
+                    const cinemaName = btn.dataset.cinemaName;
+                    const showtimeTime = btn.dataset.showtimeTime;
+                    const seatsBooked = btn.dataset.seatsBooked;
+                    const totalAmount = btn.dataset.totalAmount;
+                    const posterUrl = btn.dataset.posterUrl;
+
+                    sessionStorage.setItem('currentBookingDetails', JSON.stringify({
+                        bookingId: parseInt(bookingId),
+                        totalAmount: parseFloat(totalAmount),
+                        movieTitle: movieTitle,
+                        cinemaName: cinemaName,
+                        showtimeTime: showtimeTime,
+                        selectedSeatsLabels: seatsBooked,
+                        posterUrl: posterUrl
+                    }));
+
+                    window.location.href = `payment.html?bookingId=${bookingId}`;
+                });
+            });
+
+            // Thêm trình lắng nghe sự kiện cho các nút "Hủy vé"
+            document.querySelectorAll('.btn-cancel-ticket').forEach(button => {
+                button.addEventListener('click', async (e) => {
+                    const btn = e.target;
+                    const bookingId = btn.dataset.bookingId;
+                    const movieTitle = btn.dataset.movieTitle;
+
+                    const confirmCancel = confirm(`Bạn có chắc chắn muốn hủy vé cho phim "${movieTitle}"?\n\nHành động này không thể hoàn tác.`);
+
+                    if (!confirmCancel) {
+                        return;
                     }
 
+                    try {
+                        btn.disabled = true;
+                        btn.textContent = 'Đang hủy...';
+                        // Thay thế classList bằng style.opacity để làm mờ nút
+                        btn.style.opacity = '0.5';
+                        btn.style.cursor = 'not-allowed';
 
-                    const ticketCard = document.createElement('div');
-                    ticketCard.className = 'ticket-card';
-                    ticketCard.innerHTML = `
-                        <div class="ticket-card-poster">
-                            <img src="${ticket.poster_url || 'https://via.placeholder.com/120x180?text=Movie+Poster'}" alt="${ticket.movie_title}">
-                        </div>
-                        <div class="ticket-info">
-                            <h3>${ticket.movie_title || 'Đang cập nhật'}</h3>
-                            <p><strong>Ngày chiếu:</strong> ${ticketShowtimeTime && !isNaN(ticketShowtimeTime) ? ticketShowtimeTime.toLocaleDateString('vi-VN') : 'Đang cập nhật'}</p>
-                            <p><strong>Giờ chiếu:</strong> ${ticketShowtimeTime && !isNaN(ticketShowtimeTime) ? ticketShowtimeTime.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : 'Đang cập nhật'}</p>
-                            <p><strong>Rạp:</strong> ${ticket.theater_name || 'Đang cập nhật'}</p>
-                            <p><strong>Phòng:</strong> ${ticket.theater_name || 'Đang cập nhật'}</p>
-                            <p><strong>Ghế:</strong> ${ticket.seats_booked || 'Đang cập nhật'}</p>
-                            <p><strong>Tổng tiền:</strong> ${ticket.total_amount ? parseFloat(ticket.total_amount).toLocaleString('vi-VN') + ' VND' : 'Đang cập nhật'}</p>
-                            <p><strong>Trạng thái:</strong> <span style="color: ${ticket.booking_status === 'confirmed' ? 'var(--success-color)' : 'var(--danger-color)'}">${ticket.booking_status === 'confirmed' ? 'Đã xác nhận' : (ticket.booking_status === 'pending' ? 'Đang chờ thanh toán' : 'Đang cập nhật')}</span></p>
-                            ${ticket.booking_status === 'pending' ? `
-                                <button class="btn-pay-now bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out mt-3"
-                                    data-booking-id="${ticket.booking_id}"
-                                    data-movie-title="${ticket.movie_title}"
-                                    data-cinema-name="${ticket.theater_name}"
-                                    data-showtime-time="${ticket.showtime_date_time}"
-                                    data-seats-booked="${ticket.seats_booked}"
-                                    data-total-amount="${ticket.total_amount}"
-                                    data-poster-url="${ticket.poster_url}">
-                                    Thanh toán ngay
-                                </button>` : ''}
-                        </div>
-                        <div class="ticket-qr-code p-4 flex items-center justify-center">
-                            ${ticket.booking_status === 'confirmed' ?
-                                generateGenericQrCodeHtml('vé này được trả tiền rồi nha, legit legit', 150) : ''}
-                            ${ticket.booking_status === 'pending' ?
-                                generateGenericQrCodeHtml(qrContentForPendingTicket, 150) : ''}
-                        </div>
-                    `;
-                    ticketsListContainer.appendChild(ticketCard);
+                        const result = await cancelBooking(parseInt(bookingId), token);
+                        console.log('Kết quả hủy vé:', result);
+
+                        displayMessage('Hủy vé thành công!', 'success');
+
+                        setTimeout(() => {
+                            loadUserTicketsPage(); // Tải lại trang để cập nhật danh sách vé
+                        }, 1000);
+
+                    } catch (error) {
+                        console.error('Lỗi khi hủy vé:', error);
+                        displayMessage(`Không thể hủy vé: ${error.message}`, 'error');
+
+                        btn.disabled = false;
+                        btn.textContent = 'Hủy vé';
+                        // Khôi phục opacity và cursor
+                        btn.style.opacity = '1';
+                        btn.style.cursor = 'pointer'; // hoặc 'auto'
+                    }
                 });
+            });
 
-                // Thêm trình lắng nghe sự kiện cho các nút "Thanh toán ngay" sau khi chúng được hiển thị
-                document.querySelectorAll('.btn-pay-now').forEach(button => {
-                    button.addEventListener('click', (e) => {
-                        const btn = e.target;
-                        const bookingId = btn.dataset.bookingId;
-                        const movieTitle = btn.dataset.movieTitle;
-                        const cinemaName = btn.dataset.cinemaName;
-                        const showtimeTime = btn.dataset.showtimeTime;
-                        const seatsBooked = btn.dataset.seatsBooked;
-                        const totalAmount = btn.dataset.totalAmount;
-                        const posterUrl = btn.dataset.posterUrl;
-
-                        // Lưu chi tiết đặt vé vào session storage cho trang thanh toán
-                        sessionStorage.setItem('currentBookingDetails', JSON.stringify({
-                            bookingId: parseInt(bookingId),
-                            totalAmount: parseFloat(totalAmount),
-                            movieTitle: movieTitle,
-                            cinemaName: cinemaName,
-                            showtimeTime: showtimeTime,
-                            selectedSeatsLabels: seatsBooked,
-                            posterUrl: posterUrl // Thêm URL poster vào session storage
-                        }));
-
-                        window.location.href = `payment.html?bookingId=${bookingId}`;
-                    });
-                });
-
-            } else {
-                ticketsListContainer.innerHTML = ''; // Xóa thông báo tải
-                noTicketsMessage.classList.remove('hidden'); // Hiển thị thông báo "không có vé"
+        } else {
+            ticketsListContainer.innerHTML = ''; // Xóa thông báo tải
+            if (noTicketsMessage) {
+                noTicketsMessage.style.display = 'block'; // Hiển thị thông báo "không có vé"
             }
-        } catch (error) {
-            displayMessage(`Không thể tải vé của bạn: ${error.message}`, 'error');
-            console.error('Lỗi khi tìm nạp vé người dùng:', error);
-            ticketsListContainer.innerHTML = '<p class="text-center">Lỗi khi tải vé.</p>';
-            noTicketsMessage.classList.add('hidden'); // Ẩn nếu có lỗi và không biết trạng thái
+        }
+    } catch (error) {
+        displayMessage(`Không thể tải vé của bạn: ${error.message}`, 'error');
+        console.error('Lỗi khi tìm nạp vé người dùng:', error);
+        ticketsListContainer.innerHTML = '<p class="text-center">Lỗi khi tải vé.</p>';
+        if (noTicketsMessage) {
+            noTicketsMessage.style.display = 'none'; // Ẩn thông báo "không có vé" khi có lỗi tải
         }
     }
+}
 
     // --- Chức năng biểu mẫu xác thực (login.html, register.html) ---
     /**
@@ -871,7 +968,7 @@ function createMovieCard(movie) {
                         localStorage.setItem('jwtToken', result.token);
                         localStorage.setItem('userName', result.user?.name || 'Người dùng'); // Lưu tên người dùng
                         localStorage.setItem('userRole', result.user?.role || 'user'); // Lưu vai trò người dùng
-                        displayMessage('Đăng nhập thành công, đang chuyển hướng...', 'success');
+                        displayMessage('Đăng nhập thành công! Đang chuyển hướng...', 'success');
                         setTimeout(() => {
                             window.location.href = 'index.html'; // Chuyển hướng về trang chủ
                         }, 1000);
@@ -905,7 +1002,7 @@ function createMovieCard(movie) {
                     const result = await registerUser({ name, email, password, phone });
                     console.log('API đăng ký đã trả về:', result);
                     if (result && result.message) {
-                        displayMessage('Đăng ký thành công, vui lòng đăng nhập.', 'success');
+                        displayMessage('Đăng ký thành công! Vui lòng đăng nhập.', 'success');
                         setTimeout(() => {
                             window.location.href = 'login.html';
                         }, 1500);
@@ -918,43 +1015,5 @@ function createMovieCard(movie) {
                 }
             });
         }
-    }
-
-    // --- Chức năng hiển thị thông báo toàn cục (Đã chuyển từ api.js để có sẵn rõ ràng) ---
-    /**
-     * Hiển thị thông báo tạm thời cho người dùng.
-     * @param {string} message - Thông báo cần hiển thị.
-     * @param {string} type - Loại thông báo ('info', 'success', 'error').
-     * @param {number} duration - Thời gian hiển thị tính bằng mili giây (0 cho không giới hạn).
-     */
-    function displayMessage(message, type = 'info', duration = 3000) {
-        const messageArea = document.getElementById('messageArea') || createMessageArea();
-        if (!messageArea) return;
-
-        messageArea.textContent = message;
-        messageArea.className = `message-area ${type}`; // success, error, info
-        messageArea.style.display = 'block';
-
-        if (duration > 0) {
-            setTimeout(() => {
-                messageArea.style.display = 'none';
-            }, duration);
-        }
-    }
-
-    /**
-     * Tạo phần tử vùng thông báo nếu nó chưa tồn tại.
-     * @returns {HTMLElement} Phần tử vùng thông báo.
-     */
-    function createMessageArea() {
-        const existingArea = document.getElementById('messageArea');
-        if (existingArea) return existingArea;
-
-        const area = document.createElement('div');
-        area.id = 'messageArea';
-        area.className = 'message-area';
-        area.style.display = 'none';
-        document.body.insertBefore(area, document.body.firstChild);
-        return area;
     }
 });
