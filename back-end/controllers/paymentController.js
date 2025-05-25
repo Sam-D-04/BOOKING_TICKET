@@ -36,8 +36,8 @@ exports.processPayment = async (req, res) => {
             return res.status(400).json({ message: 'Số tiền thanh toán không khớp với tổng tiền của đơn đặt vé.' });
         }
 
-        //Giả lập quá trình thanh toán)
-        let paymentStatus = 'failed'; // mặc định là thất bại
+        //Giả lập quá trình thanh toán
+        let paymentStatus = 'failed'; 
         let transactionId = null;
 
         if (['momo', 'banking', 'zalopay', 'credit_card'].includes(paymentMethod)) {
@@ -65,7 +65,7 @@ exports.processPayment = async (req, res) => {
         `;
         await connection.query(paymentQuery, [bookingId, amount, paymentDate, paymentMethod, transactionId, paymentStatus]);
 
-        // 4. Cập nhật trạng thái booking nếu thanh toán thành công (hoặc chờ thanh toán)
+        // Cập nhật trạng thái booking nếu thanh toán thành công
         let newBookingStatus = booking.status;
         if (paymentStatus === 'completed') {
             newBookingStatus = 'confirmed'; // Xác nhận booking

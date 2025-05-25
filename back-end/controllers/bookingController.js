@@ -8,12 +8,12 @@ exports.getSeatsForShowtime = async (req, res) => {
     }
 
     try {
-        // 1. Lấy thông tin suất chiếu và phòng chiếu
+        //Lấy thông tin suất chiếu và phòng chiếu
         const [showtimeInfo] = await db.query(
             `SELECT s.id as showtime_id, s.theater_id, s.price as base_price, t.name as theater_name, t.num_rows, t.seats_per_row 
              FROM showtime s
              JOIN theater t ON s.theater_id = t.id
-             WHERE s.id = ? AND s.status = 'open'`, // Chỉ lấy suất chiếu đang mở
+             WHERE s.id = ? AND s.status = 'open'`,
             [showtimeId]
         );
 
@@ -22,25 +22,25 @@ exports.getSeatsForShowtime = async (req, res) => {
         }
         const theater = showtimeInfo[0];
 
-        // 2. Lấy tất cả các ghế trong phòng chiếu đó
+        //Lấy tất cả các ghế trong phòng chiếu đó
         const [allSeatsInTheater] = await db.query(
             'SELECT id as seat_id, seat_row, number as seat_number, type as seat_type FROM seat WHERE theater_id = ? ORDER BY seat_row, seat_number',
             [theater.theater_id]
         );
 
-        // 3. Lấy các ghế đã được đặt cho suất chiếu này từ bảng showtime_seat hoặc ticket
-        // Giả sử showtime_seat lưu trạng thái ghế cho từng suất chiếu
+        // Lấy các ghế đã được đặt cho suất chiếu này từ bảng showtime_seat hoặc ticket
+
         const [bookedSeatsForShowtime] = await db.query(
             'SELECT seat_id FROM showtime_seat WHERE showtime_id = ? AND is_available = 0',
             [showtimeId]
         );
         const bookedSeatIds = bookedSeatsForShowtime.map(s => s.seat_id);
 
-        // 4. Kết hợp thông tin ghế và trạng thái
+        // Kết hợp thông tin ghế và trạng thái
         const seatsWithStatus = allSeatsInTheater.map(seat => ({
             ...seat,
             is_available: !bookedSeatIds.includes(seat.seat_id),
-            price: theater.base_price // Đoạn này có thể thay đổi nếu bạn có nhiều loại ghế với giá khác nhau nè nhưng t lười nên sẽ để giá ghế giống nhau 
+            price: theater.base_price // Đoạn này có thể thay đổi nếu có nhiều loại ghế với giá khác nhau nè nhưng t lười nên sẽ để giá ghế giống nhau 
         }));
         
         // Tạo cấu trúc sơ đồ ghế (ví dụ: một mảng các hàng, mỗi hàng là một mảng các ghế)
@@ -68,9 +68,8 @@ exports.getSeatsForShowtime = async (req, res) => {
             theater_name: theater.theater_name,
             base_price: theater.base_price,
             num_rows: theater.num_rows,
-            seats_per_row: theater.seats_per_row, // Số ghế mỗi hàng từ bảng theater
-            seat_layout: seatLayout, // Sơ đồ ghế đã xử lý
-            // seats: seatsWithStatus, // Hoặc trả về danh sách ghế phẳng nếu frontend tự xử lý layout
+            seats_per_row: theater.seats_per_row, 
+            seat_layout: seatLayout, 
         });
 
     } catch (error) {
@@ -91,9 +90,9 @@ exports.createBooking = async (req, res) => {
     const connection = await db.getConnection(); // Lấy một kết nối để thực hiện transaction
 
     try {
-        await connection.beginTransaction(); // Bắt đầu transaction
+        await connection.beginTransaction(); 
 
-        // 1. Kiểm tra xem suất chiếu có tồn tại và còn mở không
+        // Kiểm tra xem suất chiếu có tồn tại và còn mở không
         const [showtimes] = await connection.query('SELECT id, price, theater_id FROM showtime WHERE id = ? AND status = \'open\' AND date_time >= NOW()', [showtimeId]);
         if (showtimes.length === 0) {
             await connection.rollback();
@@ -101,8 +100,8 @@ exports.createBooking = async (req, res) => {
         }
         const showtime = showtimes[0];
 
-        // 2. Kiểm tra xem các ghế có hợp lệ và còn trống không
-        // Đồng thời lấy thông tin chi tiết của từng ghế (ví dụ: loại ghế để tính giá nếu cần)
+        // Kiểm tra xem các ghế có hợp lệ và còn trống không
+        // Đồng thời lấy thông tin chi tiết của từng ghế 
         const placeholders = seatIds.map(() => '?').join(','); 
         const [selectedSeatsDetails] = await connection.query(
             `SELECT s.id, s.type, ss.is_available 
@@ -118,38 +117,34 @@ exports.createBooking = async (req, res) => {
         }
 
         for (const seat of selectedSeatsDetails) {
-            // Nếu is_available là null (chưa có trong showtime_seat) hoặc là 1 (true) thì ghế còn trống
-            // Nếu is_available là 0 (false) thì ghế đã được đặt
+
             if (seat.is_available === 0) {
                 await connection.rollback();
                 return res.status(409).json({ message: `Ghế ${seat.id} đã có người đặt. Vui lòng chọn ghế khác.` });
             }
         }
         
-        // (Tùy chọn) Tính lại tổng tiền ở backend để đảm bảo chính xác
-        const calculatedTotalAmount = seatIds.length * showtime.price; // Giả sử giá vé mỗi ghế như nhau
+        //Tính lại tổng tiền ở backend để đảm bảo chính xác
+        const calculatedTotalAmount = seatIds.length * showtime.price;
         if (parseFloat(totalAmount) !== calculatedTotalAmount) {
              await connection.rollback();
              return res.status(400).json({ message: 'Tổng tiền không khớp. Vui lòng thử lại.' });
          }
 
 
-        // 3. Tạo đơn đặt vé (booking)
+        // Tạo đơn đặt vé (booking)
         const bookingQuery = 'INSERT INTO booking (user_id, showtime_id, total_amount, status) VALUES (?, ?, ?, ?)';
         const [bookingResult] = await connection.query(bookingQuery, [userId, showtimeId, totalAmount, 'pending']); // Mặc định là 'pending' chờ thanh toán
         const bookingId = bookingResult.insertId;
 
-        // 4. Tạo các vé (tickets) và cập nhật trạng thái ghế trong showtime_seat
+        // Tạo các vé (tickets) và cập nhật trạng thái ghế trong showtime_seat
         const ticketInsertPromises = seatIds.map(seatId => {
             const ticketCode = `TICKET-${bookingId}-${seatId}-${Date.now().toString().slice(-4)}`; // Tạo mã vé đơn giản
             const ticketQuery = 'INSERT INTO ticket (booking_id, seat_id, price, ticket_code, status) VALUES (?, ?, ?, ?, ?)';
-            // Giá vé có thể lấy từ thông tin suất chiếu hoặc thông tin ghế (nếu giá khác nhau)
-            return connection.query(ticketQuery, [bookingId, seatId, showtime.price, ticketCode, 'active']); // Mặc định vé 'active' sau khi tạo booking
+            return connection.query(ticketQuery, [bookingId, seatId, showtime.price, ticketCode, 'active']); 
         });
         
         const showtimeSeatUpdatePromises = seatIds.map(seatId => {
-            // Kiểm tra xem ghế đã có trong showtime_seat chưa, nếu chưa thì INSERT, rồi thì UPDATE
-            // Ở đây giả định sẽ INSERT mới hoặc UPDATE nếu đã có (ví dụ, nếu trước đó ghế được giải phóng)
             const upsertQuery = `
                 INSERT INTO showtime_seat (showtime_id, seat_id, is_available) 
                 VALUES (?, ?, 0) 
@@ -168,11 +163,11 @@ exports.createBooking = async (req, res) => {
         });
 
     } catch (error) {
-        await connection.rollback(); // Hoàn tác nếu có lỗi
+        await connection.rollback(); 
         console.error('Lỗi tạo đơn đặt vé:', error);
         res.status(500).json({ message: 'Lỗi server khi tạo đơn đặt vé.', error: error.message });
     } finally {
-        connection.release(); // Trả kết nối về pool
+        connection.release();
     }
 };
 
@@ -194,9 +189,9 @@ exports.getUserTickets = async (req, res) => {
             JOIN showtime s ON b.showtime_id = s.id
             JOIN movie m ON s.movie_id = m.id
             JOIN theater th ON s.theater_id = th.id
-            JOIN ticket t ON b.id = t.booking_id  -- Join với bảng ticket để lấy seat_id
-            JOIN seat st ON t.seat_id = st.id     -- Join với bảng seat để lấy thông tin ghế
-            LEFT JOIN payment p ON b.id = p.booking_id -- Left join với payment để lấy trạng thái thanh toán
+            JOIN ticket t ON b.id = t.booking_id            -- Join với bảng ticket để lấy seat_id
+            JOIN seat st ON t.seat_id = st.id               -- Join với bảng seat để lấy thông tin ghế
+            LEFT JOIN payment p ON b.id = p.booking_id      -- Left join với payment để lấy trạng thái thanh toán
             WHERE b.user_id = ?
             GROUP BY b.id -- Nhóm theo booking_id để mỗi booking chỉ xuất hiện một lần
             ORDER BY b.booking_date DESC
@@ -233,7 +228,7 @@ exports.getBookingDetails = async (req, res) => {
         }
 
         // Kiểm tra quyền: chỉ chủ nhân của booking hoặc admin mới được xem 
-        if (bookingDetails[0].user_id !== userId /* && req.user.role !== 'admin' */) {
+        if (bookingDetails[0].user_id !== userId) {
             return res.status(403).json({ message: 'Bạn không có quyền xem đơn đặt vé này.' });
         }
 
@@ -247,7 +242,7 @@ exports.getBookingDetails = async (req, res) => {
             [bookingId]
         );
         
-        // Lấy thông tin thanh toán (nếu có)
+        // Lấy thông tin thanh toán 
         const [paymentInfo] = await db.query('SELECT * FROM payment WHERE booking_id = ?', [bookingId]);
 
         res.json({
@@ -286,18 +281,16 @@ exports.cancelBooking = async (req, res) => {
             return res.status(400).json({ message: 'Chỉ các đặt vé đang chờ xử lý mới có thể hủy thủ công.' });
         }
 
-        const showtimeId = booking.showtime_id; // Lấy showtime_id từ thông tin booking
+        const showtimeId = booking.showtime_id
 
-        // 2. Cập nhật trạng thái đặt vé thành 'cancelled'
+        //Cập nhật trạng thái đặt vé thành 'cancelled'
         await connection.query(
             'UPDATE booking SET status = ? WHERE id = ?',
             ['cancelled', bookingId]
         );
 
-        // 3. Giải phóng ghế trong bảng `showtime_seat`
-        // Lấy các `id` của các ghế trong bảng `showtime_seat` đã được đặt bởi `bookingId` này
-        // Giả định bảng `ticket` liên kết `booking` với `showtime_seat`
-        // Và bảng `ticket` có cột `showtime_seat_id` và `booking_id`
+        // Giải phóng ghế trong bảng `showtime_seat`
+
         const [tickets] = await connection.query(
             'SELECT seat_id FROM ticket WHERE booking_id = ?',
             [bookingId]
@@ -312,12 +305,12 @@ exports.cancelBooking = async (req, res) => {
                 [showtimeSeatIdsToFree, showtimeId] // Đảm bảo cả showtime_id để an toàn hơn
             );
 
-            // Tùy chọn: Xóa các bản ghi chi tiết vé khỏi bảng `ticket`
-            // Điều này phụ thuộc vào việc bạn muốn giữ lại lịch sử vé đã hủy trong bảng `ticket` hay không
+            /*Đoạn này muốn mất luôn vé thì bỏ comment
             await connection.query(
                 'DELETE FROM ticket WHERE booking_id = ?',
                 [bookingId]
             );
+            */
         }
 
         await connection.commit();
@@ -325,7 +318,7 @@ exports.cancelBooking = async (req, res) => {
 
     } catch (error) {
         await connection.rollback();
-        console.error('Lỗi khi hủy đặt vé:', error); // CẦN XEM LOG NÀY NẾU VẪN CÓ LỖI
+        console.error('Lỗi khi hủy đặt vé:', error);
         res.status(500).json({ message: 'Lỗi server khi hủy đặt vé.', error: error.message });
     } finally {
         connection.release();

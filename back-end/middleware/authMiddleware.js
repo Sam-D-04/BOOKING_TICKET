@@ -13,7 +13,7 @@ exports.protect = async (req, res, next) => {
             const decoded = jwt.verify(token, JWT_SECRET);
 
             // Lấy thông tin người dùng từ DB
-            const query = 'SELECT id, name, email, role FROM registered_user WHERE id = ?'; // Hoặc SELECT ..., is_admin FROM ...
+            const query = 'SELECT id, name, email, role FROM registered_user WHERE id = ?'; 
             const [users] = await db.query(query, [decoded.id]);
 
             if (users.length === 0) {
@@ -34,7 +34,6 @@ exports.protect = async (req, res, next) => {
 
 // Middleware bảo vệ các tuyến đường yêu cầu quyền admin
 exports.adminProtect = (req, res, next) => {
-    // req.user phải được gắn bởi middleware 'protect' trước đó
     if (!req.user) {
         return res.status(401).json({ message: 'Không được phép, người dùng không xác định.' });
     }

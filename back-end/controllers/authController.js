@@ -6,7 +6,7 @@ const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
 const JWT_SECRET = process.env.JWT_SECRET;
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '30d'; // Mặc định token hết hạn sau 30 ngày
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '30d'; 
 
 if (!JWT_SECRET) {
     console.error("FATAL ERROR: JWT_SECRET is not defined in .env file for authController.");
