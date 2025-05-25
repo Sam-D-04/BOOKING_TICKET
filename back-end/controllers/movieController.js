@@ -1,12 +1,11 @@
 
 const db = require('../config/db'); // Import pool kết nối đã được promise hóa
 
-// Lấy tất cả phim (ví dụ, có thể lọc theo status)
+// Lấy tất cả phim 
 exports.getAllMovies = async (req, res) => {
     try {
         const [movies] = await db.query('SELECT id, title, description, genre, duration, release_date, status, poster_url FROM movie');
-        // Giả sử bạn có cột poster_url trong bảng movie để chứa URL ảnh poster
-        // Nếu không, bạn có thể trả về ảnh mặc định hoặc không có ảnh
+
         res.json(movies);
     } catch (error) {
         console.error('Lỗi lấy danh sách phim:', error);

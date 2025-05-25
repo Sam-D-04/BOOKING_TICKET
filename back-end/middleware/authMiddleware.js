@@ -12,7 +12,7 @@ exports.protect = async (req, res, next) => {
             token = req.headers.authorization.split(' ')[1];
             const decoded = jwt.verify(token, JWT_SECRET);
 
-            // Lấy thông tin người dùng từ DB (có thể bao gồm vai trò)
+            // Lấy thông tin người dùng từ DB
             const query = 'SELECT id, name, email, role FROM registered_user WHERE id = ?'; // Hoặc SELECT ..., is_admin FROM ...
             const [users] = await db.query(query, [decoded.id]);
 
@@ -39,7 +39,7 @@ exports.adminProtect = (req, res, next) => {
         return res.status(401).json({ message: 'Không được phép, người dùng không xác định.' });
     }
     // Kiểm tra vai trò của người dùng
-    if (req.user.role !== 'admin') { // Hoặc if (!req.user.is_admin)
+    if (req.user.role !== 'admin') { 
         return res.status(403).json({ message: 'Không được phép, bạn không có quyền admin.' });
     }
     next();

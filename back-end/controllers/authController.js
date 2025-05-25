@@ -10,7 +10,6 @@ const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '30d'; // Mặc định tok
 
 if (!JWT_SECRET) {
     console.error("FATAL ERROR: JWT_SECRET is not defined in .env file for authController.");
-    // Không nên process.exit(1) ở đây vì nó có thể đã được gọi ở middleware
 }
 
 // Hàm tạo JWT token
@@ -71,7 +70,7 @@ exports.loginUser = async (req, res) => {
     }
 
     try {
-        // Tìm người dùng bằng email và lấy cả trường 'role' (hoặc 'is_admin')
+        // Tìm người dùng bằng email 
         const query = 'SELECT id, name, email, password, role FROM registered_user WHERE email = ?'; // Hoặc SELECT ..., is_admin FROM ...
         const [users] = await db.query(query, [email]);
 
@@ -105,7 +104,7 @@ exports.loginUser = async (req, res) => {
     }
 };
 
-// Lấy thông tin profile người dùng (ví dụ)
+// Lấy thông tin profile người dùng 
 exports.getUserProfile = async (req, res) => {
     // req.user được gắn từ middleware 'protect'
     if (!req.user || !req.user.id) {

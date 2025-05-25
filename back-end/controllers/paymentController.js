@@ -1,6 +1,6 @@
 const db = require('../config/db');
 
-// Xử lý một yêu cầu thanh toán mới (Giả lập)
+// Xử lý một yêu cầu thanh toán mới 
 exports.processPayment = async (req, res) => {
     const { bookingId, paymentMethod, amount  } = req.body;
     const userId = req.user.id;
@@ -13,7 +13,7 @@ exports.processPayment = async (req, res) => {
     try {
         await connection.beginTransaction();
 
-        // 1. Kiểm tra xem booking có tồn tại và thuộc về người dùng này không, và có đang ở trạng thái 'pending' không
+        //Kiểm tra xem booking có tồn tại và thuộc về người dùng này không, và có đang ở trạng thái pending không
         const [bookings] = await connection.query(
             'SELECT id, user_id, total_amount, status FROM booking WHERE id = ? AND user_id = ?',
             [bookingId, userId]
@@ -36,9 +36,8 @@ exports.processPayment = async (req, res) => {
             return res.status(400).json({ message: 'Số tiền thanh toán không khớp với tổng tiền của đơn đặt vé.' });
         }
 
-        // 2. Giả lập quá trình thanh toán
-        // Trong thực tế, bạn sẽ gọi API của cổng thanh toán ở đây (Stripe, PayPal, Momo, ZaloPay,...)
-        let paymentStatus = 'failed'; // Mặc định là thất bại
+        //Giả lập quá trình thanh toán)
+        let paymentStatus = 'failed'; // mặc định là thất bại
         let transactionId = null;
 
         if (['momo', 'banking', 'zalopay', 'credit_card'].includes(paymentMethod)) {
@@ -47,12 +46,12 @@ exports.processPayment = async (req, res) => {
         } else if (paymentMethod === 'cash') { // Thanh toán tại quầy
             paymentStatus = 'pending'; // Chờ xác nhận tại quầy
             transactionId = `COUNTER_${Date.now()}`;
-        } else { // Các trường hợp khác, giả lập thất bại
+        } else { 
             paymentStatus = 'failed';
         }
 
 
-        // 3. Tạo bản ghi payment trong database
+        //Tạo bản ghi payment trong database
         const paymentDate = paymentStatus === 'completed' ? new Date() : null;
         const paymentQuery = `
             INSERT INTO payment (booking_id, amount, payment_date, payment_method, transaction_id, status) 

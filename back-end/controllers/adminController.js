@@ -1,5 +1,5 @@
 const db = require('../config/db');
-const bcrypt = require('bcryptjs'); // Nếu bạn muốn cho admin đổi mật khẩu người dùng
+const bcrypt = require('bcryptjs'); 
 
 // --- Quản lý phim ---
 exports.getAllMovies = async (req, res) => {

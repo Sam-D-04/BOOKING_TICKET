@@ -1,4 +1,3 @@
-// backend/routes/adminRoutes.js (Tạo file mới)
 const express = require('express');
 const router = express.Router();
 const { protect, adminProtect } = require('../middleware/authMiddleware');

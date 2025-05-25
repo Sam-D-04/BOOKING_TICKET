@@ -45,3 +45,57 @@ app.listen(PORT, () => {
         })
         .catch(err => console.error('Không thể kết nối DB từ server.js:', err));
 });
+
+
+const CANCELLATION_TIMEOUT_MINUTES = 5; // Thời gian giữ vé 
+
+async function autoCancelExpiredBookings() {
+    console.log('Đang chạy tác vụ hủy đặt vé hết hạn...');
+    const connection = await db.getConnection();
+    try {
+        await connection.beginTransaction();
+
+        // Tìm các đặt vé đang chờ xử lý đã quá 5 phút
+        const [expiredBookings] = await connection.query(
+            `SELECT b.id AS booking_id, bs.seat_id, b.showtime_id
+             FROM bookings b
+             JOIN booking_seats bs ON b.id = bs.booking_id
+             WHERE b.booking_status = 'pending' AND b.booking_time < NOW() - INTERVAL ? MINUTE`,
+            [CANCELLATION_TIMEOUT_MINUTES]
+        );
+
+        if (expiredBookings.length > 0) {
+            const bookingIdsToCancel = [...new Set(expiredBookings.map(b => b.booking_id))];
+            console.log(`Tìm thấy ${bookingIdsToCancel.length} đặt vé hết hạn cần hủy.`);
+
+            // Cập nhật trạng thái của các đặt vé này thành 'cancelled'
+            await connection.query(
+                'UPDATE bookings SET booking_status = ? WHERE id IN (?)',
+                ['cancelled', bookingIdsToCancel]
+            );
+
+            // Giải phóng ghế trong showtime_seats
+            for (const booking of expiredBookings) {
+                await connection.query(
+                    'UPDATE showtime_seats SET is_available = TRUE WHERE showtime_id = ? AND seat_id = ?',
+                    [booking.showtime_id, booking.seat_id]
+                );
+            }
+
+            console.log(`Đã hủy thành công ${bookingIdsToCancel.length} đặt vé hết hạn.`);
+        } else {
+            console.log('Không tìm thấy đặt vé hết hạn nào.');
+        }
+
+        await connection.commit();
+    } catch (error) {
+        await connection.rollback();
+        console.error('Lỗi trong tác vụ hủy tự động:', error);
+    } finally {
+        connection.release();
+    }
+}
+
+// Chạy tác vụ hủy tự động mỗi phút (60 giây)
+// Đảm bảo server của đã khởi động trước khi gọi setInterval
+setInterval(autoCancelExpiredBookings, 60 * 1000); 

@@ -261,3 +261,68 @@ exports.getBookingDetails = async (req, res) => {
         res.status(500).json({ message: 'Lỗi server khi lấy chi tiết đơn đặt vé.', error: error.message });
     }
 };
+exports.cancelBooking = async (req, res) => {
+    const { bookingId } = req.params;
+    const userId = req.user.id; // Người dùng yêu cầu hủy
+
+    const connection = await db.getConnection();
+    try {
+        await connection.beginTransaction();
+
+        // 1. Kiểm tra xem đặt vé có tồn tại, thuộc về người dùng và có thể hủy được (trạng thái 'pending')
+        const [bookings] = await connection.query(
+            'SELECT status FROM booking WHERE id = ? AND user_id = ?',
+            [bookingId, userId]
+        );
+
+        if (bookings.length === 0) {
+            await connection.rollback();
+            return res.status(404).json({ message: 'Không tìm thấy đặt vé hoặc bạn không có quyền hủy.' });
+        }
+
+        const booking = bookings[0];
+        if (booking.status !== 'pending') {
+            await connection.rollback();
+            return res.status(400).json({ message: 'Chỉ các đặt vé đang chờ xử lý mới có thể hủy thủ công.' });
+        }
+
+        // 2. Cập nhật trạng thái đặt vé thành 'cancelled'
+        await connection.query(
+            'UPDATE booking SET status = ? WHERE id = ?',
+            ['cancelled', bookingId]
+        );
+
+        // 3. Giải phóng ghế (Nếu bạn có bảng `showtime_seats` với cột `is_available`, bạn cần cập nhật nó ở đây)
+        // Lấy các seat_id liên quan đến booking này
+        const [bookedSeats] = await connection.query(
+            'SELECT seat_id FROM booking_seats WHERE booking_id = ?',
+            [bookingId]
+        );
+        const seatIdsToFree = bookedSeats.map(s => s.seat_id);
+
+        // Cập nhật trạng thái ghế trong showtime_seats (nếu có)
+        if (seatIdsToFree.length > 0) {
+            // Bạn cần biết showtime_id để cập nhật showtime_seats
+            const [showtimeInfo] = await connection.query(
+                'SELECT showtime_id FROM booking WHERE id = ?',
+                [bookingId]
+            );
+            const showtimeId = showtimeInfo[0].showtime_id;
+
+            await connection.query(
+                'UPDATE showtime_seats SET is_available = TRUE WHERE showtime_id = ? AND seat_id IN (?)',
+                [showtimeId, seatIdsToFree]
+            );
+        }
+
+        await connection.commit();
+        res.json({ message: 'Đặt vé đã được hủy thành công!' });
+
+    } catch (error) {
+        await connection.rollback();
+        console.error('Lỗi khi hủy đặt vé:', error);
+        res.status(500).json({ message: 'Lỗi server khi hủy đặt vé.', error: error.message });
+    } finally {
+        connection.release();
+    }
+};

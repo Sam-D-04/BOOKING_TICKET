@@ -7,7 +7,7 @@ const bookingController = require('../controllers/bookingController');
 const { protect } = require('../middleware/authMiddleware'); // Yêu cầu đăng nhập cho các hành động này
 
 // GET /api/bookings/showtimes/:showtimeId/seats - Lấy thông tin ghế và trạng thái của một suất chiếu
-router.get('/showtimes/:showtimeId/seats', protect, bookingController.getSeatsForShowtime);
+router.get('/:showtimeId/seats', protect, bookingController.getSeatsForShowtime);
 
 // POST /api/bookings - Tạo một đơn đặt vé mới
 router.post('/', protect, bookingController.createBooking);
@@ -18,8 +18,9 @@ router.get('/my-tickets', protect, bookingController.getUserTickets);
 // GET /api/bookings/:bookingId - Lấy chi tiết một đơn đặt vé (có thể dùng cho admin hoặc người dùng tự xem)
 router.get('/:bookingId', protect, bookingController.getBookingDetails);
 
-// POST /api/bookings/:bookingId/cancel - Hủy một đơn đặt vé (ví dụ)
-// router.post('/:bookingId/cancel', protect, bookingController.cancelBooking);
+// DELETE /api/bookings/:bookingId - Hủy đặt vé 
+router.delete('/:bookingId', protect, bookingController.cancelBooking); 
+
 
 module.exports = router;
 
