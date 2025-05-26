@@ -920,3 +920,10 @@ h2.section-title::after {
         justify-content: center;
     }
 }
+.countdown-timer {
+    color: #dc3545;
+    font-weight: bold;
+    font-size: 1.2rem;
+    margin: 10px 0;
+}
+
