@@ -92,7 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (token && userName) {
             // Người dùng đã đăng nhập
             const userGreeting = document.createElement('span');
-            userGreeting.textContent = `Xin chào, ${userName}!`;
+            userGreeting.textContent = `Hé lô, ${userName}!`;
             userGreeting.style.marginRight = '15px';
             userGreeting.style.fontWeight = 'bold';
             userAuthSection.appendChild(userGreeting);
@@ -177,7 +177,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (error) {
             // Xử lý lỗi hiện được thực hiện bởi hàm gọi (loadHomePageContent)
-            throw error; // Ném lại lỗi để hàm gọi xử lý
+            throw error; 
         }
     }
 
@@ -198,7 +198,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         card.innerHTML = `
             <div class="movie-card-poster">
-                <img src="${movie.poster_url || 'https://via.placeholder.com/250x380?text=No+Poster'}" alt="${movie.title}">
+                <img src="${movie.poster_url}" alt="${movie.title}">
             </div>
             <div class="movie-card-info">
                 <h3>${movie.title}</h3>
@@ -210,7 +210,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return card;
     }
 
-    // --- Chức năng trang chi tiết phim (movie-detail.html) ---
+    // --- Chức năng trang chi tiết phim---
     /**
      * Tải và hiển thị chi tiết phim và các suất chiếu có sẵn cho một phim cụ thể.
      */
@@ -219,7 +219,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const movieId = urlParams.get('id');
 
         if (!movieId) {
-            document.getElementById('movieDetailContainer').innerHTML = '<p class="text-center">Không tìm thấy ID phim.</p>';
+            document.getElementById('movieDetailContainer').innerHTML = '<p class="text-center">Không tìm thấy ID phim</p>';
             displayMessage('Không tìm thấy ID phim.', 'error');
             return;
         }
@@ -409,9 +409,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
        
             if (seatData && seatData.seat_layout && seatData.num_rows && seatData.seats_per_row) {
-                seatMapContainer.innerHTML = ''; // Xóa thông báo tải
+                seatMapContainer.innerHTML = ''; 
 
-                const { num_rows, seats_per_row, seat_layout, base_price } = seatData; // Trích xuất base_price
+                const { num_rows, seats_per_row, seat_layout, base_price } = seatData; 
                 currentTicketPricePerSeat = parseFloat(base_price); // Đặt giá động
                 console.log('Giá cơ bản cho vé:', currentTicketPricePerSeat);
 
@@ -425,12 +425,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 seat_layout.forEach(rowObj => {
                     const rowChar = rowObj.row_label;
                     rowObj.seats.forEach((seat, colIndex) => {
-                        // Đã sửa: Sử dụng seat.seat_number cho colNum, và ánh xạ is_available sang chuỗi trạng thái
+                        // Sử dụng seat.seat_number cho colNum, và ánh xạ is_available sang chuỗi trạng thái
                         const colNum = seat.seat_number; // Sử dụng seat_number trực tiếp cho cột
                         const seatKey = `${rowChar}-${colNum}`;
                         seatStatusMap.set(seatKey, {
-                            id: seat.seat_id, // Đã sửa: Sử dụng seat.seat_id
-                            status: seat.is_available ? 'available' : 'booked' // Đã sửa: Ánh xạ is_available sang chuỗi 'available'/'booked'
+                            id: seat.seat_id, //Sử dụng seat.seat_id
+                            status: seat.is_available ? 'available' : 'booked' //Ánh xạ is_available sang chuỗi 'available'/'booked'
                         });
                     });
                 });
@@ -541,9 +541,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     }));
                     sessionStorage.removeItem('selectedShowtimeDetails'); // Xóa chi tiết suất chiếu
 
-                    // KHÔNG CÓ LOGIC DỪNG ĐỒNG HỒ ĐẾM NGƯỢC TRÊN TRANG BOOKING NỮA
-                    // clearInterval(countdownInterval); 
-
                     // Nếu phương thức thanh toán là 'at_counter', chuyển hướng trực tiếp đến trang vé
                     if (paymentMethod === 'at_counter') {
                         setTimeout(() => {
@@ -618,12 +615,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (radio.value === 'credit_card') {
                     creditCardDetails.classList.remove('hidden');
                     bankTransferDetails.classList.add('hidden');
-                    vietQrContainer.classList.add('hidden'); // Ẩn QR VietQR
+                    vietQrContainer.classList.add('hidden');
                 } else if (radio.value === 'bank_transfer') {
                     creditCardDetails.classList.add('hidden');
                     bankTransferDetails.classList.remove('hidden');
-                    vietQrContainer.classList.remove('hidden'); // Hiển thị QR VietQR
-                    generateVietQrCode(currentBookingDetails, vietQrContainer); // Tạo QR
+                    vietQrContainer.classList.remove('hidden'); 
+                    generateVietQrCode(currentBookingDetails, vietQrContainer); 
                 }
             });
         });
@@ -709,7 +706,7 @@ document.addEventListener('DOMContentLoaded', () => {
      * @param {HTMLElement} container - Phần tử HTML để thêm mã QR vào.
      */
     function generateVietQrCode(bookingDetails, container) {
-        const bankAccountNumber = 'VCB-NGUYENHAIDANG2004'; // Mã tài khoản/ngân hàng như trong URL của bạn
+        const bankAccountNumber = 'VCB-NGUYENHAIDANG2004';
         const bankName = 'Vietcombank'; // Tên ngân hàng
         const accountName = 'NGUYỄN HẢI ĐĂNG'; // Tên người nhận
         const amount = bookingDetails.totalAmount;
@@ -720,8 +717,8 @@ document.addEventListener('DOMContentLoaded', () => {
         let formattedDate = 'Khong ro ngay';
 
         if (showtimeDate && !isNaN(showtimeDate)) {
-            formattedTime = showtimeDate.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }).replace(':', 'h'); // ví dụ: "14h30"
-            formattedDate = showtimeDate.toLocaleDateString('vi-VN').replace(/\//g, '-'); // ví dụ: "24-05-2025"
+            formattedTime = showtimeDate.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }).replace(':', 'h'); 
+            formattedDate = showtimeDate.toLocaleDateString('vi-VN').replace(/\//g, '-'); 
         }
 
         const cinemaName = bookingDetails.cinemaName || 'Rap';
@@ -745,7 +742,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <strong>Số tiền:</strong> <span class="font-medium text-green-600">${amount.toLocaleString('vi-VN')} VND</span><br>
                 <strong>Nội dung chuyển khoản:</strong> <span class="font-medium text-purple-600">${noteContent}</span>
             </p>
-            <p class="text-sm text-gray-500 mt-2 text-center">Vui lòng kiểm tra kỹ thông tin trước khi chuyển khoản.</p>
+            <p class="text-sm text-gray-500 mt-2 text-center">Vui lòng kiểm tra kỹ thông tin trước khi chuyển khoản</p>
         `;
     }
 
@@ -764,10 +761,6 @@ document.addEventListener('DOMContentLoaded', () => {
     /**
      * Tải và hiển thị các vé đã đặt của người dùng.
      */
-// main.js
-
-// ... (các import và các hàm khác của bạn, bao gồm displayMessage và createMessageArea) ...
-
 async function loadUserTicketsPage() {
     const token = localStorage.getItem('jwtToken');
     const ticketsListContainer = document.getElementById('userTicketsList');
@@ -785,10 +778,9 @@ async function loadUserTicketsPage() {
     // Hàm trợ giúp để kiểm tra Date object hợp lệ
     const isValidDate = (date) => date instanceof Date && !isNaN(date);
 
-    // **KIỂM TRA NULL NGAY LẬP TỨC CHO CÁC PHẦN TỬ DOM QUAN TRỌNG**
     if (!ticketsListContainer) {
-        console.error("Lỗi: Không tìm thấy phần tử 'userTicketsList'. Đảm bảo tickets.html có id này.");
-        displayMessage('Lỗi tải trang: Không tìm thấy vùng hiển thị vé.', 'error');
+        console.error("Lỗi: Không tìm thấy phần tử 'userTicketsList'");
+        displayMessage('Lỗi tải trang: Không tìm thấy vùng hiển thị vé', 'error');
         return;
     }
 
@@ -815,15 +807,11 @@ async function loadUserTicketsPage() {
             
             tickets.forEach(ticket => {
                 console.log('Đang xử lý vé:', ticket);
-                // Sử dụng booking_date thay vì booking_time
                 console.log('Giá trị booking_date từ API:', ticket.booking_date); 
                 const bookingTime = ticket.booking_date ? new Date(ticket.booking_date) : null;
-                
-                // Kiểm tra ticketShowtimeTime cũng bằng isValidDate
+
                 const ticketShowtimeTime = ticket.showtime_date_time ? new Date(ticket.showtime_date_time) : null;
 
-
-                // Kiểm tra nếu bookingTime không hợp lệ
                 if (!isValidDate(bookingTime)) {
                     console.error('Lỗi: booking_date không hợp lệ cho vé:', ticket.booking_id, ticket.booking_date);
                     // Hiển thị một thông báo hoặc bỏ qua phần đếm ngược cho vé này
@@ -842,7 +830,7 @@ async function loadUserTicketsPage() {
                             <p><strong>Ghế:</strong> ${ticket.seats_booked || 'Đang cập nhật'}</p>
                             <p><strong>Tổng tiền:</strong> ${ticket.total_amount ? parseFloat(ticket.total_amount).toLocaleString('vi-VN') + ' VND' : 'Đang cập nhật'}</p>
                             <p><strong>Trạng thái:</strong> <span style="color: ${ticket.booking_status === 'confirmed' ? 'var(--success-color)' : (ticket.booking_status === 'pending' ? 'var(--pending-color)' : 'var(--danger-color)')}">${ticket.booking_status === 'confirmed' ? 'Đã xác nhận' : (ticket.booking_status === 'pending' ? 'Đang chờ thanh toán' : 'Đã hủy')}</span></p>
-                            <p class="text-red-500 italic mt-3">Lỗi: Thời gian đặt vé không hợp lệ.</p>
+                            <p class="text-red-500 italic mt-3">Lỗi: Thời gian đặt vé không hợp lệ</p>
                             ${ticket.booking_status === 'pending' ? `
                                 <div class="flex gap-3 mt-3">
                                     <button class="btn-pay-now bg-[#f17300] hover:bg-[#d86200] text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out"
@@ -874,12 +862,12 @@ async function loadUserTicketsPage() {
                                 generateGenericQrCodeHtml(qrContentForPendingTicket, 150) : ''}
                         </div>`;
                     ticketsListContainer.appendChild(ticketCard);
-                    return; // Bỏ qua vé này khỏi logic đếm ngược
+                    return; // Bỏ qua vé này khỏi đếm ngược
                 }
 
                 const now = new Date();
-                const timeElapsed = now - bookingTime; // now và bookingTime đã được kiểm tra hợp lệ
-                const countdownDuration = 3 * 60 * 1000; // 3 phút
+                const timeElapsed = now - bookingTime; 
+                const countdownDuration = 3 * 60 * 1000; 
                 let timeLeft = countdownDuration - timeElapsed;
 
                 // Nếu vé đã hết hạn và đang pending, hủy ngay
@@ -933,7 +921,7 @@ async function loadUserTicketsPage() {
                     // Bắt đầu đếm ngược
                     countdownInterval = setInterval(updateCountdown, 1000);
                     window.activeTimers.push(countdownInterval);
-                    updateCountdown(); // Cập nhật ngay lập tức
+                    updateCountdown(); // Cập nhật liền
                 }
 
                 // Tạo QR content cho vé pending
