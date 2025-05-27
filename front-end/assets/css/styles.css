@@ -132,7 +132,7 @@ img {
 
 /* Hero Section (Optional for Index Page) */
 .hero-section {
-    background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url(/front-end/assets/images/hero-bg.jpg) no-repeat center center/cover;
+    background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url(../images/hero-bg.jpg) no-repeat center center/cover;
     height: 400px;
     display: flex;
     justify-content: center;
