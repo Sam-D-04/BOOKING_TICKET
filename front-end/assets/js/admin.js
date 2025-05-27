@@ -289,10 +289,7 @@ async function loadMoviesForAdmin() {
                             document.getElementById('movieGenre').value = movie.genre;
                             document.getElementById('movieDuration').value = movie.duration;
                             document.getElementById('moviePosterUrl').value = movie.poster_url;
-                            document.getElementById('movieReleaseDate').value = movie.release_date ? new Date(movie.release_date).toISOString().split('T')[0] : ''; // Định dạng lại ngày YYYY-MM-DD
-                            document.getElementById('movieDirector').value = movie.director;
-                            document.getElementById('movieCast').value = movie.cast;
-                            document.getElementById('movieImdbRating').value = movie.imdb_rating;
+                            document.getElementById('movieReleaseDate').value = movie.release_date ? new Date(movie.release_date).toISOString().split('T')[0] : ''; // Định dạng lại ngày YYYY-MM-DD         
                             document.getElementById('movieStatus').value = movie.status;
                             document.getElementById('movieFormContainer').classList.remove('hidden');
                             document.getElementById('movieTitle').focus();
